@@ -1,0 +1,82 @@
+{
+  "default": {
+    "log_format": "[${date?date(yyyy-MM-dd HH:mm:ss)}][$category][$level] $message",
+    "format": {
+      "bot_start": "Started ${bot.username}",
+      "bot_stop": "Stopping ${bot.username}",
+      "old_update": null,
+      "new_update": null,
+      "plugin_init_error": "An error occurred while initializing plugin",
+      "plugin_update_error": "An error occurred while handling an update $update",
+      "plugin_close_error": "An error occurred while closing plugin",
+      "command_received": "$input",
+      "command_error": "An error occurred while handling command '$input'",
+      "commands": {
+        "unknown": "Unknown command '$name'",
+        "stop": null,
+        "enable": {
+          "usage": "Usage: $name <plugin name>",
+          "already_enabled": "Plugin '$plugin' is already enabled",
+          "cannot_enable": "Cannot enable plugin '$plugin': file not found or invalid plugin",
+          "enabled": "Plugin '$plugin' is now enabled"
+        },
+        "disable": {
+          "usage": "Usage: $name <plugin name>",
+          "not_enabled": "Plugin '$plugin' is not enabled",
+          "disabled": "Plugin '$plugin' is now disabled"
+        }
+      }
+    },
+    "loggers": [
+      {
+        "type": "console"
+      },
+      {
+        "type": "file",
+        "directory": "logs",
+        "max_file_size": 10000,
+        "file_name": "${date?date(yyyyMMddHHmmss)}-$id.txt"
+      }
+    ]
+  },
+  "debug": {
+    "log_format": "[${date?date(yyyy-MM-dd HH:mm:ss.SSS)}][$category][$level] $message",
+    "format": {
+      "bot_start": "Started $bot",
+      "bot_stop": "Stopping $bot",
+      "old_update": "old update: $update",
+      "new_update": "update: $update",
+      "plugin_init_error": "An error occurred while initializing plugin",
+      "plugin_update_error": "An error occurred while handling an update $update",
+      "plugin_close_error": "An error occurred while closing plugin",
+      "command_received": "$input",
+      "command_error": "An error occurred while handling command '$input'",
+      "commands": {
+        "unknown": "Unknown command '$name'",
+        "stop": null,
+        "enable": {
+          "usage": "Usage: $name <plugin name>",
+          "already_enabled": "Plugin '$plugin' is already enabled",
+          "cannot_enable": "Cannot enable plugin '$plugin': file not found or invalid plugin",
+          "enabled": "Plugin '$plugin' is now enabled"
+        },
+        "disable": {
+          "usage": "Usage: $name <plugin name>",
+          "not_enabled": "Plugin '$plugin' is not enabled",
+          "disabled": "Plugin '$plugin' is now disabled"
+        }
+      }
+    },
+    "loggers": [
+      {
+        "type": "console"
+      },
+      {
+        "type": "file",
+        "directory": "logs",
+        "max_file_size": 10000,
+        "file_name": "${date?date(yyyyMMddHHmmss)}-$id-debug.txt"
+      }
+    ]
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "type": "long_polling",
+  "back_off": 50
+}
