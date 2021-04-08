@@ -23,15 +23,28 @@ data class LoggerFormat(
 ) {
     @Serializable
     data class Commands(
-        val unknown: String?,
-        val stop: String?,
+        val unknown: Unknown,
+        val stop: Stop,
         val enable: Enable,
-        val disable: Disable
+        val disable: Disable,
+        val plugins: Plugins,
+        val reload: Reload
     ) {
+        @Serializable
+        data class Unknown(
+            val message: String?
+        )
+        
+        @Serializable
+        data class Stop(
+            val message: String?
+        )
+        
         @Serializable
         data class Enable(
             val usage: String?,
             @SerialName("already_enabled") val alreadyEnabled: String?,
+            @SerialName("cannot_load") val cannotLoad: String?,
             @SerialName("cannot_enable") val cannotEnable: String?,
             val enabled: String?
         )
@@ -40,14 +53,30 @@ data class LoggerFormat(
         data class Disable(
             val usage: String?,
             @SerialName("not_enabled") val notEnabled: String?,
+            @SerialName("cannot_disable") val cannotDisable: String?,
             @SerialName("disabled") val disabled: String?
+        )
+        
+        @Serializable
+        data class Plugins(
+            val message: String?
+        )
+        
+        @Serializable
+        data class Reload(
+            @SerialName("not_enabled") val notEnabled: String?,
+            @SerialName("cannot_load") val cannotLoad: String?,
+            @SerialName("cannot_enable") val cannotEnable: String?,
+            @SerialName("cannot_disable") val cannotDisable: String?,
+            @SerialName("plugin_reloaded") val pluginReloaded: String?,
+            @SerialName("plugins_reloaded") val pluginsReloaded: String?
         )
     }
 }
 
 @Serializable
 class Loggers(
-    @SerialName("log_format") val logFormat: String,
+    @SerialName("log_format") private val logFormat: String,
     private val format: LoggerFormat,
     private vararg val loggers: Logger
 ) {

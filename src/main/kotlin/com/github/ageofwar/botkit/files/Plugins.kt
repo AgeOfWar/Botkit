@@ -32,3 +32,14 @@ suspend fun loadPlugin(path: String): Plugin? = withContext(Dispatchers.IO) {
     val loader = URLClassLoader(arrayOf(url))
     ServiceLoader.load(Plugin::class.java, loader).findFirst().orElse(null)
 }
+
+suspend fun findPluginsNames(directory: String): Sequence<String> = withContext(Dispatchers.IO) {
+    val folder = File(directory)
+    sequence {
+        folder.listFiles()?.forEach {
+            if (it.isFile && it.extension == "jar") {
+                yield(it.nameWithoutExtension)
+            }
+        }
+    }
+}
