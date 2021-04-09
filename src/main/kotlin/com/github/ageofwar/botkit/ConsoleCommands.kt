@@ -7,13 +7,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-typealias Commands = MutableMap<String, Command>
+typealias ConsoleCommands = MutableMap<String, ConsoleCommand>
 
-interface Command {
+interface ConsoleCommand {
     suspend fun handle(name: String, args: String)
 }
 
-suspend fun listenCommands(logger: Loggers, commands: Commands, unknownCommand: Command = UnknownCommand(logger)) {
+suspend fun listenCommands(logger: Loggers, commands: ConsoleCommands, unknownCommand: ConsoleCommand = UnknownCommand(logger)) {
     while (true) {
         val input = withContext(Dispatchers.IO) {
             readLine()
@@ -49,7 +49,7 @@ fun defaultCommands(
     "reload" to ReloadPluginsCommand(logger, pluginDirectory, plugins, scope, api)
 )
 
-class UnknownCommand(private val logger: Loggers) : Command {
+class UnknownCommand(private val logger: Loggers) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) {
         logger.log(UnknownCommand(name, args))
     }
@@ -61,7 +61,7 @@ class UnknownCommand(private val logger: Loggers) : Command {
     }
 }
 
-class StopCommand(private val logger: Loggers) : Command {
+class StopCommand(private val logger: Loggers) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) {
         logger.log(StopCommand)
         throw StopRequest
@@ -80,7 +80,7 @@ class EnablePluginCommand(
     private val plugins: Plugins,
     private val scope: CoroutineScope,
     private val api: TelegramApi
-) : Command {
+) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) {
         if (args.isEmpty()) {
             logger.log(Usage(name))
@@ -140,7 +140,7 @@ class DisablePluginCommand(
     private val plugins: Plugins,
     private val scope: CoroutineScope,
     private val api: TelegramApi
-) : Command {
+) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) {
         if (args.isEmpty()) {
             logger.log(Usage(name))
@@ -189,7 +189,7 @@ class PluginsCommand(
     private val logger: Loggers,
     private val directory: String,
     private val plugins: com.github.ageofwar.botkit.Plugins
-) : Command {
+) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) {
         val (enabled, disabled) = findPluginsNames(directory).partition {
             it in plugins
@@ -210,7 +210,7 @@ class ReloadPluginsCommand(
     private val plugins: Plugins,
     private val scope: CoroutineScope,
     private val api: TelegramApi
-) : Command {
+) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) {
         if (args.isEmpty()) {
             handle(name)

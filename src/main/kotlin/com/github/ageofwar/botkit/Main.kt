@@ -1,12 +1,13 @@
 package com.github.ageofwar.botkit
 
 import com.github.ageofwar.botkit.files.*
-import com.github.ageofwar.botkit.plugin.Plugin
 import com.github.ageofwar.ktelegram.*
 import kotlinx.coroutines.*
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
+import java.lang.RuntimeException
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.system.exitProcess
 
@@ -45,7 +46,13 @@ private suspend fun loadPlugins(workingDirectory: String): Plugins {
 
 private suspend fun loadLogger(workingDirectory: String, loggerName: String, json: Json): Loggers {
     print("Loading loggers... ")
-    val loggerMap = json.readFileOrCopy<Map<String, Loggers>>("$workingDirectory/loggers.json", "loggers.json")
+    val loggerMap = json.readFileOrCopy<Map<String, Loggers>>("$workingDirectory/loggers.json", "loggers.json") {
+        if (it is SerializationException) {
+            error("Invalid loggers.json file. Please update loggers.json or delete it")
+        } else {
+            throw RuntimeException("An error occurred while loading loggers", it)
+        }
+    }
     val logger = loggerMap[loggerName] ?: error("Unknown logger '$loggerName'")
     println("Using logger '$loggerName'")
     return logger
@@ -53,7 +60,13 @@ private suspend fun loadLogger(workingDirectory: String, loggerName: String, jso
 
 private suspend fun loadBotConfig(workingDirectory: String, overrideToken: String?, json: Json): BotConfig {
     print("Loading bot information... ")
-    val config = json.readFileOrCopy<BotConfig>("$workingDirectory/bot.json", "bot.json")
+    val config = json.readFileOrCopy<BotConfig>("$workingDirectory/bot.json", "bot.json") {
+        if (it is SerializationException) {
+            error("Invalid bot.json file. Please update your bot.json or delete it")
+        } else {
+            throw RuntimeException("An error occurred while loading bot information", it)
+        }
+    }
     val token = overrideToken ?: config.token
     if (token != null) println("${token.censureToken()} (${config.apiUrl})")
     return config.copy(token = token)
@@ -61,7 +74,13 @@ private suspend fun loadBotConfig(workingDirectory: String, overrideToken: Strin
 
 private suspend fun loadBotkitConfig(workingDirectory: String, json: Json): BotkitConfig {
     print("Loading bot configuration... ")
-    val botkit = json.readFileOrCopy<BotkitConfig>("$workingDirectory/botkit.json", "botkit.json")
+    val botkit = json.readFileOrCopy<BotkitConfig>("$workingDirectory/botkit.json", "botkit.json") {
+        if (it is SerializationException) {
+            error("Invalid botkit.json file. Please update your botkit.json or delete it")
+        } else {
+            throw RuntimeException("An error occurred while loading bot configuration", it)
+        }
+    }
     println(botkit)
     return botkit
 }
