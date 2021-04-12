@@ -1,49 +1,6 @@
 {
   "default": {
     "log_format": "[${date?date(yyyy-MM-dd HH:mm:ss)}][$category][$level] $message",
-    "format": {
-      "bot_start": "Started ${bot.username}",
-      "bot_stop": "Stopping ${bot.username}",
-      "old_update": null,
-      "new_update": null,
-      "plugin_init_error": "An error occurred while initializing plugin '$plugin'",
-      "plugin_update_error": "An error occurred while handling an update $update",
-      "plugin_close_error": "An error occurred while disabling plugin '$plugin'",
-      "command_received": "$input",
-      "command_error": "An error occurred while handling command '$input'",
-      "commands": {
-        "unknown": {
-          "message": "Unknown command '$name'"
-        },
-        "stop": {
-          "message": null
-        },
-        "enable": {
-          "usage": "Usage: $name <plugin name>",
-          "already_enabled": "Plugin '$plugin' is already enabled",
-          "cannot_load": "Cannot load plugin '$plugin': file not found or invalid plugin",
-          "cannot_enable": "An error occurred while initializing plugin '$plugin'",
-          "enabled": "Plugin '$plugin' is now enabled"
-        },
-        "disable": {
-          "usage": "Usage: $name <plugin name>",
-          "not_enabled": "Plugin '$plugin' is not enabled",
-          "cannot_disable": "An error occurred while disabling plugin '$plugin'",
-          "disabled": "Plugin '$plugin' is now disabled"
-        },
-        "plugins": {
-          "message": "Enabled plugins: [${enabled?join(, )}], Disabled plugins: [${disabled?join(, )}]"
-        },
-        "reload": {
-          "not_enabled": "Plugin '$plugin' is not enabled",
-          "cannot_load": "Cannot load plugin '$plugin': file not found or invalid plugin",
-          "cannot_enable": "An error occurred while initializing plugin '$plugin'",
-          "cannot_disable": "An error occurred while disabling plugin '$plugin'",
-          "plugin_reloaded": "Plugin '$plugin' successfully reloaded",
-          "plugins_reloaded": "Plugins [${plugins?join(, )}] successfully reloaded"
-        }
-      }
-    },
     "loggers": [
       {
         "type": "console"
@@ -58,49 +15,6 @@
   },
   "debug": {
     "log_format": "[${date?date(yyyy-MM-dd HH:mm:ss.SSS)}][$category][$level] $message",
-    "format": {
-      "bot_start": "Started $bot",
-      "bot_stop": "Stopping $bot",
-      "old_update": "old update: $update",
-      "new_update": "update: $update",
-      "plugin_init_error": "An error occurred while initializing plugin '$plugin'",
-      "plugin_update_error": "An error occurred while handling an update $update",
-      "plugin_close_error": "An error occurred while closing plugin '$plugin'",
-      "command_received": "$input",
-      "command_error": "An error occurred while handling command '$input'",
-      "commands": {
-        "unknown": {
-          "message": "Unknown command '$name'"
-        },
-        "stop": {
-          "message": null
-        },
-        "enable": {
-          "usage": "Usage: $name <plugin name>",
-          "already_enabled": "Plugin '$plugin' is already enabled",
-          "cannot_load": "Cannot load plugin '$plugin': file not found or invalid plugin",
-          "cannot_enable": "An error occurred while initializing plugin '$plugin'",
-          "enabled": "Plugin '$plugin' is now enabled"
-        },
-        "disable": {
-          "usage": "Usage: $name <plugin name>",
-          "not_enabled": "Plugin '$plugin' is not enabled",
-          "cannot_disable": "An error occurred while disabling plugin '$plugin'",
-          "disabled": "Plugin '$plugin' is now disabled"
-        },
-        "plugins": {
-          "message": "Enabled plugins: [${enabled?join(, )}], Disabled plugins: [${disabled?join(, )}]"
-        },
-        "reload": {
-          "not_enabled": "Plugin '$plugin' is not enabled",
-          "cannot_load": "Cannot load plugin '$plugin': file not found or invalid plugin",
-          "cannot_enable": "An error occurred while initializing plugin '$plugin'",
-          "cannot_disable": "An error occurred while disabling plugin '$plugin'",
-          "plugin_reloaded": "Plugin '$plugin' successfully reloaded",
-          "plugins_reloaded": "Plugins [${plugins?join(, )}] successfully reloaded"
-        }
-      }
-    },
     "loggers": [
       {
         "type": "console"

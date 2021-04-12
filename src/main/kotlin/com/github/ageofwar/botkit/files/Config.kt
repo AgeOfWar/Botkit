@@ -12,10 +12,10 @@ import java.lang.Thread.currentThread
 import java.nio.file.Files
 import java.nio.file.Paths
 
-suspend inline fun <reified T> Json.readFileAs(path: String, crossinline exceptionHandler: (Throwable) -> T): T {
+suspend inline fun <reified T> Json.readFileAs(file: File, crossinline exceptionHandler: (Throwable) -> T): T {
     return withContext(Dispatchers.IO) {
         try {
-            decodeFromString(File(path).readText())
+            decodeFromString(file.readText())
         } catch (e: Throwable) {
             exceptionHandler(e)
         }
@@ -23,35 +23,31 @@ suspend inline fun <reified T> Json.readFileAs(path: String, crossinline excepti
 }
 
 suspend inline fun <reified T> Json.readFileAs(
-    path: String,
+    file: File,
     default: T,
     crossinline exceptionHandler: (Throwable) -> T
 ): T = withContext(Dispatchers.IO) {
-    val config = File(path)
-    if (!config.exists()) {
-        config.parentFile?.mkdirs()
-        config.writeText(encodeToString(default))
+    if (!file.exists()) {
+        file.parentFile?.mkdirs()
+        file.writeText(encodeToString(default))
         default
     } else {
-        readFileAs(path, exceptionHandler)
+        readFileAs(file, exceptionHandler)
     }
 }
 
 suspend inline fun <reified T> Json.readFileOrCopy(
-    path: String,
+    file: File,
     defaultPath: String,
     crossinline exceptionHandler: (Throwable) -> T
 ): T = withContext(Dispatchers.IO) {
-    val config = File(path)
-    if (!config.exists()) {
-        config.parentFile?.mkdirs()
-        val default = currentThread().contextClassLoader.getResourceAsStream("config/$defaultPath")
-        if (default == null) {
-            throw FileNotFoundException("cannot find resource on config/$defaultPath")
-        }
-        Files.copy(default, Paths.get(path))
+    if (!file.exists()) {
+        file.parentFile?.mkdirs()
+        currentThread().contextClassLoader.getResourceAsStream("config/$defaultPath")?.use {
+            Files.copy(it, Paths.get(file.path))
+        } ?: throw FileNotFoundException("cannot find resource on config/$defaultPath")
     }
-    readFileAs(path, exceptionHandler)
+    readFileAs(file, exceptionHandler)
 }
 
 fun String.template(args: Any?): String = StringTemplate.format(this, args)

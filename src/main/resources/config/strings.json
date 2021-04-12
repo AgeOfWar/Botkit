@@ -1,0 +1,38 @@
+{
+  "bot_start": "Started ${bot.username}",
+  "bot_stop": "Stopping ${bot.username}",
+  "old_update": null,
+  "new_update": null,
+  "plugin_load_error": "An error occurred while loading plugin '$plugin'",
+  "plugin_init_error": "An error occurred while initializing plugin '$plugin'",
+  "plugin_update_error": "An error occurred while handling an update $update",
+  "plugin_close_error": "An error occurred while disabling plugin '$plugin'",
+  "command_received": "$input",
+  "command_error": "An error occurred while handling command '$input'",
+  "commands": {
+    "unknown": {
+      "message": "Unknown command '$name'"
+    },
+    "stop": {
+      "message": null
+    },
+    "enable": {
+      "usage": "Usage: $name <plugin name>",
+      "already_enabled": "Plugin '$plugin' is already enabled",
+      "enabled": "Plugin '$plugin' is now enabled"
+    },
+    "disable": {
+      "usage": "Usage: $name <plugin name>",
+      "not_enabled": "Plugin '$plugin' is not enabled",
+      "disabled": "Plugin '$plugin' is now disabled"
+    },
+    "plugins": {
+      "message": "Enabled plugins: [${enabled?join(, )}], Available plugins: [${available?join(, )}]"
+    },
+    "reload": {
+      "not_enabled": "Plugin '$plugin' is not enabled",
+      "plugin_reloaded": "Plugin '$plugin' successfully reloaded",
+      "plugins_reloaded": "Plugins [${plugins?join(, )}] successfully reloaded"
+    }
+  }
+}
