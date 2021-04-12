@@ -3,6 +3,7 @@ package com.github.ageofwar.botkit
 import com.github.ageofwar.botkit.files.template
 import com.github.ageofwar.botkit.plugin.PluginLogger
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.serialization.SerialName
@@ -32,7 +33,7 @@ class Loggers(
         }
     }
     
-    suspend fun init() = supervisorScope {
+    suspend fun init() = coroutineScope {
         loggers.forEach {
             launch {
                 it.init()
@@ -59,12 +60,6 @@ data class SerializableLoggers(
 
 suspend fun Loggers.log(message: String?, category: String, level: String) {
     if (message != null) log(message, category, level)
-}
-
-suspend inline fun Loggers.use(block: (Loggers) -> Unit) {
-    init()
-    block(this)
-    close()
 }
 
 fun Loggers.toPluginLogger(name: String, scope: CoroutineScope) = object : PluginLogger {

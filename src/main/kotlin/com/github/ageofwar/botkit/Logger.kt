@@ -1,11 +1,12 @@
 package com.github.ageofwar.botkit
 
 import com.github.ageofwar.botkit.files.template
-import kotlinx.coroutines.*
+import com.github.ageofwar.ktelegram.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import java.io.File
@@ -72,6 +73,29 @@ class FileLogger(
             i++
         } while (File(fileName).exists())
         return fileName
+    }
+}
+
+@Serializable
+@SerialName("telegram")
+class TelegramLogger(
+    private val token: String,
+    @SerialName("api_url") private val apiUrl: String,
+    private val chat: Long
+) : Logger() {
+    @Transient lateinit var api: TelegramApi
+    
+    override suspend fun init() {
+        api = TelegramApi(token, apiUrl)
+        api.getMe()
+    }
+    
+    override suspend fun log(message: String) {
+        api.sendMessage(ChatId.fromId(chat), TextContent(Text(message)), disableNotification = true)
+    }
+    
+    override suspend fun close() = withContext(Dispatchers.IO) {
+        api.close()
     }
 }
 

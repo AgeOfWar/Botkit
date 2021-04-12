@@ -76,8 +76,8 @@ private suspend fun loadLogger(workingDirectory: String, loggerName: String, str
             throw RuntimeException("An error occurred while loading loggers", it)
         }
     }
-    val logger = loggerMap[loggerName]?.toLoggers(strings) ?: error("Unknown logger '$loggerName'")
-    println("Using logger '$loggerName'")
+    val logger = loggerMap[loggerName]?.toLoggers(strings) ?: error("Unknown option '$loggerName'")
+    println("Using '$loggerName'")
     return logger
 }
 
@@ -106,6 +106,16 @@ private suspend fun loadBotkitConfig(workingDirectory: String, json: Json): Botk
     }
     println(botkit)
     return botkit
+}
+
+private suspend inline fun Loggers.use(block: () -> Unit) {
+    print("Initializing loggers... ")
+    init()
+    println("Done")
+    block()
+    print("Closing loggers... ")
+    close()
+    println("Done")
 }
 
 private fun error(message: String): Nothing {
