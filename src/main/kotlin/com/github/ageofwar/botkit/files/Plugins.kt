@@ -40,7 +40,7 @@ suspend fun loadPlugin(file: File, context: Context): Plugin = withContext(Dispa
             as? Plugin ?: throw PluginLoadException("Cannot find ${Plugin::class.java.name} implementation in ${file.nameWithoutExtension}")
     plugin.apply {
         this.name = name
-        this.dataFolder = file.parentFile.resolve(this.name)
+        this.dataFolder = context.pluginsDirectory.resolve(this.name)
         this.file = file
         this.context = context
     }
