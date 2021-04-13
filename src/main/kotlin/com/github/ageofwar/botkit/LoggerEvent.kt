@@ -36,7 +36,7 @@ data class NewUpdate(val update: Update) : LoggerEvent {
 
 data class PluginLoadError(val plugin: String, val message: String) : LoggerEvent {
     override fun message(format: Strings) = format.pluginLoadError
-    override val category = plugin
+    override val category = "Botkit"
     override val level = "ERROR"
 }
 
@@ -68,4 +68,22 @@ data class CommandError(val input: String, override val throwable: Throwable) : 
     override fun message(format: Strings) = format.commandError
     override val category = "Botkit"
     override val level = "ERROR"
+}
+
+data class CommandReloadError(override val throwable: Throwable) : LoggerEvent {
+    override fun message(format: Strings) = format.commandsReloadError
+    override val category = "Botkit"
+    override val level = "ERROR"
+}
+
+data class PluginAlreadyEnabled(val plugin: String) : LoggerEvent {
+    override fun message(format: Strings) = format.pluginAlreadyEnabled
+    override val category = "Botkit"
+    override val level = "INFO"
+}
+
+data class PluginNotEnabled(val plugin: String) : LoggerEvent {
+    override fun message(format: Strings) = format.pluginNotEnabled
+    override val category = "Botkit"
+    override val level = "INFO"
 }

@@ -1,32 +1,30 @@
 package com.github.ageofwar.botkit.files
 
-import com.github.ageofwar.botkit.Loggers
+import com.github.ageofwar.botkit.Context
 import com.github.ageofwar.botkit.PluginLoadError
 import com.github.ageofwar.botkit.Plugins
 import com.github.ageofwar.botkit.plugin.Plugin
-import com.github.ageofwar.botkit.toPluginLogger
-import com.github.ageofwar.ktelegram.TelegramApi
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.net.URLClassLoader
 import java.util.*
 
-suspend fun Plugins.loadPlugins(directory: File, logger: Loggers, api: TelegramApi, scope: CoroutineScope) = withContext(Dispatchers.IO) {
+suspend fun Plugins.loadPlugins(directory: File, context: Context) = withContext(Dispatchers.IO) {
     directory.mkdirs()
     val files = directory.listFiles() ?: error("$directory is not a directory!")
     files.filter { it.isFile && it.extension == "jar" }.forEach {
         try {
-            val plugin = loadPlugin(it, logger, api, scope)
+            val plugin = loadPlugin(it, context)
             put(plugin.name, plugin)
         } catch (e: PluginLoadException) {
-            System.err.println(logger.strings.pluginLoadError?.template(PluginLoadError(it.nameWithoutExtension, e.message)))
+            val error = context.logger.strings.pluginLoadError?.template(PluginLoadError(it.nameWithoutExtension, e.message))
+            System.err.println(error)
         }
     }
 }
 
-suspend fun Plugins.loadPlugin(file: File, logger: Loggers, api: TelegramApi, scope: CoroutineScope): Plugin = withContext(Dispatchers.IO) {
+suspend fun loadPlugin(file: File, context: Context): Plugin = withContext(Dispatchers.IO) {
     val url = file.toURI().toURL()
     val loader = URLClassLoader(arrayOf(url))
     val pluginInfo = Properties().apply {
@@ -42,12 +40,9 @@ suspend fun Plugins.loadPlugin(file: File, logger: Loggers, api: TelegramApi, sc
             as? Plugin ?: throw PluginLoadException("Cannot find ${Plugin::class.java.name} implementation in ${file.nameWithoutExtension}")
     plugin.apply {
         this.name = name
-        this.api = api
-        this.logger = logger.toPluginLogger(name, scope)
         this.dataFolder = file.parentFile.resolve(this.name)
-        this.plugins = this@loadPlugin
-        this.scope = scope
         this.file = file
+        this.context = context
     }
 }
 

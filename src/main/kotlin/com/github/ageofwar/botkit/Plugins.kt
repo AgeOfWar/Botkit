@@ -1,9 +1,6 @@
 package com.github.ageofwar.botkit
 
 import com.github.ageofwar.botkit.plugin.Plugin
-import com.github.ageofwar.ktelegram.BotCommand
-import com.github.ageofwar.ktelegram.TelegramApi
-import com.github.ageofwar.ktelegram.setMyCommands
 
 typealias Plugins = MutableMap<String, Plugin>
 
@@ -33,34 +30,27 @@ suspend fun Plugins.close(logger: Loggers) {
     }
 }
 
-suspend fun Plugin.init(logger: Loggers): Boolean {
+suspend fun Plugin.init(context: Context): Boolean {
     return try {
         registerCommands()
         init()
         true
     } catch (e: Throwable) {
-        logger.log(PluginInitError(name, e))
+        context.log(PluginInitError(name, e))
         false
     }
 }
 
-suspend fun Plugin.close(logger: Loggers): Boolean {
+suspend fun Plugin.close(context: Context): Boolean {
     return try {
         close()
         true
     } catch (e: Throwable) {
-        logger.log(PluginCloseError(name, e))
+        context.log(PluginCloseError(name, e))
         false
     } finally {
         (javaClass.classLoader as? AutoCloseable)?.close()
     }
-}
-
-suspend fun TelegramApi.updateMyCommands(plugins: Plugins) {
-    val commands = plugins.flatMap { (_, plugin) ->
-        plugin.commands.map { BotCommand(it.key, it.value) }
-    }
-    setMyCommands(commands)
 }
 
 fun Plugin.registerCommands(fileName: String = "commands.txt") {

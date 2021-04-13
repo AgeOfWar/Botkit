@@ -13,8 +13,11 @@ data class Strings(
     @SerialName("plugin_init_error") val pluginInitError: String?,
     @SerialName("plugin_update_error") val pluginUpdateError: String?,
     @SerialName("plugin_close_error") val pluginCloseError: String?,
+    @SerialName("plugin_already_enabled") val pluginAlreadyEnabled: String?,
+    @SerialName("plugin_not_enabled") val pluginNotEnabled: String?,
     @SerialName("command_received") val commandReceived: String?,
     @SerialName("command_error") val commandError: String?,
+    @SerialName("commands_reload_error") val commandsReloadError: String?,
     val commands: Commands
 ) {
     @Serializable
@@ -39,14 +42,12 @@ data class Strings(
         @Serializable
         data class Enable(
             val usage: String?,
-            @SerialName("already_enabled") val alreadyEnabled: String?,
             val enabled: String?
         )
         
         @Serializable
         data class Disable(
             val usage: String?,
-            @SerialName("not_enabled") val notEnabled: String?,
             @SerialName("disabled") val disabled: String?
         )
         
@@ -57,7 +58,6 @@ data class Strings(
         
         @Serializable
         data class Reload(
-            @SerialName("not_enabled") val notEnabled: String?,
             @SerialName("plugin_reloaded") val pluginReloaded: String?,
             @SerialName("plugins_reloaded") val pluginsReloaded: String?
         )

@@ -1,30 +1,52 @@
 {
-  "default": {
-    "log_format": "[${date?date(yyyy-MM-dd HH:mm:ss)}][$category][$level] $message",
-    "loggers": [
-      {
-        "type": "console"
+  "log_format": "[${date?date(yyyy-MM-dd HH:mm:ss)}][$category][$level] $message",
+  "loggers": [
+    {
+      "type": "console"
+    },
+    {
+      "type": "file",
+      "directory": "logs",
+      "max_file_size": 10000,
+      "file_name": "${date?date(yyyyMMddHHmmss)}-$id.txt"
+    }
+  ],
+  "strings": {
+    "bot_start": "Started ${bot.username}",
+    "bot_stop": "Stopping ${bot.username}",
+    "old_update": null,
+    "new_update": null,
+    "plugin_load_error": "An error occurred while loading plugin '$plugin'",
+    "plugin_init_error": "An error occurred while initializing plugin '$plugin'",
+    "plugin_update_error": "An error occurred while handling an update $update",
+    "plugin_close_error": "An error occurred while disabling plugin '$plugin'",
+    "plugin_already_enabled": "Plugin '$plugin' is already enabled",
+    "plugin_not_enabled": "Plugin '$plugin' is not enabled",
+    "command_received": "$input",
+    "command_error": "An error occurred while handling command '$input'",
+    "commands_reload_error": "An error occurred while reloading telegram commands",
+    "commands": {
+      "unknown": {
+        "message": "Unknown command '$name'"
       },
-      {
-        "type": "file",
-        "directory": "logs",
-        "max_file_size": 10000,
-        "file_name": "${date?date(yyyyMMddHHmmss)}-$id.txt"
-      }
-    ]
-  },
-  "debug": {
-    "log_format": "[${date?date(yyyy-MM-dd HH:mm:ss.SSS)}][$category][$level] $message",
-    "loggers": [
-      {
-        "type": "console"
+      "stop": {
+        "message": null
       },
-      {
-        "type": "file",
-        "directory": "logs",
-        "max_file_size": 10000,
-        "file_name": "${date?date(yyyyMMddHHmmss)}-$id-debug.txt"
+      "enable": {
+        "usage": "Usage: $name <plugin name>",
+        "enabled": "Plugin '$plugin' is now enabled"
+      },
+      "disable": {
+        "usage": "Usage: $name <plugin name>",
+        "disabled": "Plugin '$plugin' is now disabled"
+      },
+      "plugins": {
+        "message": "Enabled plugins: [${enabled?join(, )}], Available plugins: [${available?join(, )}]"
+      },
+      "reload": {
+        "plugin_reloaded": "Plugin '$plugin' successfully reloaded",
+        "plugins_reloaded": "Plugins [${plugins?join(, )}] successfully reloaded"
       }
-    ]
+    }
   }
 }

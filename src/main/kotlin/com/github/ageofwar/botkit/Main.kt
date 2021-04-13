@@ -5,7 +5,6 @@ import com.github.ageofwar.botkit.files.readFileOrCopy
 import com.github.ageofwar.botkit.plugin.Plugin
 import com.github.ageofwar.ktelegram.TelegramApi
 import com.github.ageofwar.ktelegram.getMe
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -18,66 +17,51 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.system.exitProcess
 
 fun main(vararg args: String) = runBlocking {
-    val (overrideToken, loggerName, workingDirectory) = parseArgs(*args)
+    val (overrideToken, workingDirectory) = parseArgs(*args)
     val json = buildJson(workingDirectory)
-    val strings = loadStrings(workingDirectory, json)
-    val logger = loadLogger(workingDirectory, loggerName, strings, json)
+    val logger = loadLogger(workingDirectory, json)
     val (token, apiUrl) = loadBotConfig(workingDirectory, overrideToken, json)
     token ?: error("Insert 'bot_token' field into bot.json")
     val botkit = loadBotkitConfig(workingDirectory, json)
     val api = TelegramApi(token, apiUrl)
     val bot = api.getMe()
-    val plugins = loadPlugins(workingDirectory, logger, api, this)
+    val plugins = ConcurrentHashMap<String, Plugin>()
+    val commands = ConcurrentHashMap<String, ConsoleCommand>()
+    val context = Context(api, logger, this, plugins, File(workingDirectory, "plugins"), commands)
+    context.addDefaultConsoleCommands()
+    plugins.loadPlugins(workingDirectory, context)
     logger.use {
         plugins.init(logger)
-        launch { api.updateMyCommands(plugins) }
+        context.reloadCommands()
         logger.log(BotStart(bot))
         val job = launch { botkit(api, logger, botkit, plugins) }
-        val commands = defaultCommands(logger, File(workingDirectory, "plugins"), plugins, this, api).toMap(ConcurrentHashMap())
-        listenCommands(logger, commands)
+        listenCommands(context)
         logger.log(BotStop(bot))
         job.cancelAndJoin()
         plugins.close(logger)
     }
 }
 
-private suspend fun loadStrings(workingDirectory: String, json: Json): Strings {
-    print("Loading strings... ")
-    val strings = json.readFileOrCopy<Strings>(File(workingDirectory, "strings.json"), "strings.json") {
-        it.printStackTrace()
-        if (it is SerializationException) {
-            error("Invalid strings.json file. Please update strings.json or delete it")
-        } else {
-            throw RuntimeException("An error occurred while loading strings", it)
-        }
-    }
-    println("Done")
-    return strings
-}
-
-private suspend fun loadPlugins(workingDirectory: String, logger: Loggers, api: TelegramApi, scope: CoroutineScope): Plugins {
+private suspend fun Plugins.loadPlugins(workingDirectory: String, context: Context) {
     print("Loading plugins... ")
-    val plugins = ConcurrentHashMap<String, Plugin>()
-    plugins.loadPlugins(File(workingDirectory, "plugins"), logger, api, scope)
-    when (plugins.size) {
+    loadPlugins(File(workingDirectory, "plugins"), context)
+    when (size) {
         0 -> println("No plugin found")
-        1 -> println("1 plugin found (${plugins.keys.single()})")
-        else -> println("${plugins.size} plugins found (${plugins.keys.joinToString(", ") { "'$it'" }})")
+        1 -> println("1 plugin found (${keys.single()})")
+        else -> println("$size plugins found (${keys.joinToString(", ") { "'$it'" }})")
     }
-    return plugins
 }
 
-private suspend fun loadLogger(workingDirectory: String, loggerName: String, strings: Strings, json: Json): Loggers {
+private suspend fun loadLogger(workingDirectory: String, json: Json): Loggers {
     print("Loading loggers... ")
-    val loggerMap = json.readFileOrCopy<Map<String, SerializableLoggers>>(File(workingDirectory, "loggers.json"), "loggers.json") {
+    val logger = json.readFileOrCopy<Loggers>(File(workingDirectory, "loggers.json"), "loggers.json") {
         if (it is SerializationException) {
             error("Invalid loggers.json file. Please update loggers.json or delete it")
         } else {
             throw RuntimeException("An error occurred while loading loggers", it)
         }
     }
-    val logger = loggerMap[loggerName]?.toLoggers(strings) ?: error("Unknown option '$loggerName'")
-    println("Using '$loggerName'")
+    println("Done")
     return logger
 }
 
