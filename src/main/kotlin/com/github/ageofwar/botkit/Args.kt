@@ -21,7 +21,6 @@ fun parseArgs(vararg args: String): Args {
                     Usage: java -jar ${programFile.name} [options]
                     where options include:
                         -token=<token> overrides token in bot.json
-                        -logger=<logger name> selects the logger from the logger.json, default to "default"
                         -dir=<working directory> changes the working directory
                         -? -h -help prints this help message to the output stream
                 """.trimIndent())
