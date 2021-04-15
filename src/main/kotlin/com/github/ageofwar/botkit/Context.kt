@@ -1,5 +1,8 @@
 package com.github.ageofwar.botkit
 
+import com.github.ageofwar.botkit.files.PluginLoadException
+import com.github.ageofwar.botkit.files.findPluginsNames
+import com.github.ageofwar.botkit.files.loadPlugin
 import com.github.ageofwar.botkit.plugin.Plugin
 import com.github.ageofwar.ktelegram.BotCommand
 import com.github.ageofwar.ktelegram.TelegramApi
@@ -17,6 +20,45 @@ data class Context(
     val pluginsDirectory: File,
     val commands: ConsoleCommands
 )
+
+suspend fun Context.getAvailablePlugins() = findPluginsNames(pluginsDirectory)
+
+suspend fun Context.enablePlugin(name: String): Boolean {
+    val plugin = try {
+        loadPlugin(pluginsDirectory.resolve("$name.jar"), this)
+    } catch (e: PluginLoadException) {
+        log(PluginLoadError(name, e.message))
+        return false
+    }
+    if (plugin.name in plugins) {
+        log(PluginAlreadyEnabled(plugin.name))
+        return false
+    }
+    if (plugin.init(this)) {
+        plugins[plugin.name] = plugin
+        return true
+    }
+    return false
+}
+
+suspend fun Context.enablePlugins(vararg names: String): List<String> {
+    return names.filter { enablePlugin(it) }
+}
+
+suspend fun Context.disablePlugin(name: String): Boolean {
+    val plugin = plugins[name]
+    if (plugin == null) {
+        log(PluginNotEnabled(name))
+        return false
+    }
+    plugins -= name
+    plugin.close(this)
+    return true
+}
+
+suspend fun Context.disablePlugins(vararg names: String): List<String> {
+    return names.filter { disablePlugin(it) }
+}
 
 fun Context.addDefaultConsoleCommands() = commands.putAll(arrayOf(
     "stop" to StopCommand(logger),

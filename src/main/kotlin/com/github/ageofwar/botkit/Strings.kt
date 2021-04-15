@@ -42,13 +42,15 @@ data class Strings(
         @Serializable
         data class Enable(
             val usage: String?,
-            val enabled: String?
+            @SerialName("plugin_enabled") val pluginEnabled: String?,
+            @SerialName("plugins_enabled") val pluginsEnabled: String?
         )
         
         @Serializable
         data class Disable(
             val usage: String?,
-            @SerialName("disabled") val disabled: String?
+            @SerialName("plugin_disabled") val pluginDisabled: String?,
+            @SerialName("plugins_disabled") val pluginsDisabled: String?
         )
         
         @Serializable

@@ -1,7 +1,6 @@
 package com.github.ageofwar.botkit
 
 import com.github.ageofwar.botkit.files.PluginLoadException
-import com.github.ageofwar.botkit.files.findPluginsNames
 import com.github.ageofwar.botkit.files.loadPlugin
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -75,25 +74,22 @@ class StopCommand(private val logger: Loggers) : ConsoleCommand {
 class EnablePluginCommand(private val context: Context) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) {
         if (args.isEmpty()) {
-            context.log(Usage(name))
-            return
+            return context.log(Usage(name))
+        }
+        if (args == "*") {
+            return handle(name)
         }
         val pluginName = args.removeSuffix(".jar")
-        val plugin = try {
-            loadPlugin(context.pluginsDirectory.resolve("$pluginName.jar"), context)
-        } catch (e: PluginLoadException) {
-            context.log(PluginLoadError(pluginName, e.message))
-            return
-        }
-        if (plugin.name in context.plugins) {
-            context.log(PluginAlreadyEnabled(args))
-            return
-        }
-        if (plugin.init(context)) {
-            context.plugins[pluginName] = plugin
-            context.log(Enabled(pluginName))
+        if (context.enablePlugin(pluginName)) {
+            context.log(PluginEnabled(pluginName))
             context.reloadCommands()
         }
+    }
+    
+    private suspend fun handle(name: String) {
+        val enabled = context.enablePlugins(*context.getAvailablePlugins().toList().toTypedArray())
+        context.log(PluginsEnabled(enabled))
+        context.reloadCommands()
     }
     
     data class Usage(val name: String) : LoggerEvent {
@@ -102,8 +98,14 @@ class EnablePluginCommand(private val context: Context) : ConsoleCommand {
         override val level = "INFO"
     }
     
-    data class Enabled(val plugin: String) : LoggerEvent {
-        override fun message(format: Strings) = format.commands.enable.enabled
+    data class PluginEnabled(val plugin: String) : LoggerEvent {
+        override fun message(format: Strings) = format.commands.enable.pluginEnabled
+        override val category = "Botkit"
+        override val level = "INFO"
+    }
+    
+    data class PluginsEnabled(val plugins: Iterable<String>) : LoggerEvent {
+        override fun message(format: Strings) = format.commands.enable.pluginsEnabled
         override val category = "Botkit"
         override val level = "INFO"
     }
@@ -115,14 +117,18 @@ class DisablePluginCommand(private val context: Context) : ConsoleCommand {
             context.log(Usage(name))
             return
         }
-        val plugin = context.plugins[args]
-        if (plugin == null) {
-            context.log(PluginNotEnabled(args))
-            return
+        if (args == "*") {
+            return handle(name)
         }
-        context.plugins -= args
-        plugin.close(context)
-        context.log(Disabled(args))
+        if (context.disablePlugin(args)) {
+            context.log(PluginDisabled(args))
+            context.reloadCommands()
+        }
+    }
+    
+    private suspend fun handle(name: String) {
+        val disabled = context.disablePlugins(*context.plugins.keys.toTypedArray())
+        context.log(PluginsDisabled(disabled))
         context.reloadCommands()
     }
     
@@ -132,8 +138,14 @@ class DisablePluginCommand(private val context: Context) : ConsoleCommand {
         override val level = "INFO"
     }
     
-    data class Disabled(val plugin: String) : LoggerEvent {
-        override fun message(format: Strings) = format.commands.disable.disabled
+    data class PluginDisabled(val plugin: String) : LoggerEvent {
+        override fun message(format: Strings) = format.commands.disable.pluginDisabled
+        override val category = "Botkit"
+        override val level = "INFO"
+    }
+    
+    data class PluginsDisabled(val plugins: Iterable<String>) : LoggerEvent {
+        override fun message(format: Strings) = format.commands.disable.pluginsDisabled
         override val category = "Botkit"
         override val level = "INFO"
     }
@@ -141,7 +153,7 @@ class DisablePluginCommand(private val context: Context) : ConsoleCommand {
 
 class PluginsCommand(private val context: Context) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) {
-        context.log(Plugins(context.plugins.keys, findPluginsNames(context.pluginsDirectory).toList()))
+        context.log(Plugins(context.plugins.keys, context.getAvailablePlugins().toList()))
     }
     
     data class Plugins(val enabled: Iterable<String>, val available: Iterable<String>) : LoggerEvent {

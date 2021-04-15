@@ -34,11 +34,13 @@
       },
       "enable": {
         "usage": "Usage: $name <plugin name>",
-        "enabled": "Plugin '$plugin' is now enabled"
+        "plugin_enabled": "Plugin '$plugin' is now enabled",
+        "plugins_enabled": "Plugins [${plugins?join(, )}] are now enabled"
       },
       "disable": {
         "usage": "Usage: $name <plugin name>",
-        "disabled": "Plugin '$plugin' is now disabled"
+        "plugin_disabled": "Plugin '$plugin' is now disabled",
+        "plugins_disabled": "Plugins [${plugins?join(, )}] are now disabled"
       },
       "plugins": {
         "message": "Enabled plugins: [${enabled?join(, )}], Available plugins: [${available?join(, )}]"
