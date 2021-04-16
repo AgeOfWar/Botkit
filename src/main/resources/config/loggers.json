@@ -16,7 +16,7 @@
     "bot_stop": "Stopping ${bot.username}",
     "old_update": null,
     "new_update": null,
-    "plugin_load_error": "An error occurred while loading plugin '$plugin'",
+    "plugin_load_error": "An error occurred while loading plugin '$plugin': $message",
     "plugin_init_error": "An error occurred while initializing plugin '$plugin'",
     "plugin_update_error": "An error occurred while handling an update $update",
     "plugin_close_error": "An error occurred while disabling plugin '$plugin'",

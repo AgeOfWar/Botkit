@@ -3,6 +3,7 @@ package com.github.ageofwar.botkit
 import com.github.ageofwar.botkit.files.PluginLoadException
 import com.github.ageofwar.botkit.files.findPluginsNames
 import com.github.ageofwar.botkit.files.loadPlugin
+import com.github.ageofwar.botkit.files.search
 import com.github.ageofwar.botkit.plugin.Plugin
 import com.github.ageofwar.ktelegram.BotCommand
 import com.github.ageofwar.ktelegram.TelegramApi
@@ -21,43 +22,77 @@ data class Context(
     val commands: ConsoleCommands
 )
 
-suspend fun Context.getAvailablePlugins() = findPluginsNames(pluginsDirectory)
+suspend fun Context.getAvailablePlugins() = pluginsDirectory.findPluginsNames()
 
-suspend fun Context.enablePlugin(name: String): Boolean {
+suspend fun Context.enablePlugin(name: String): Plugin? {
+    val file = pluginsDirectory.search(name)
+    if (file == null) {
+        log(PluginLoadError(name, "Plugin not found"))
+        return null
+    }
     val plugin = try {
-        loadPlugin(pluginsDirectory.resolve("$name.jar"), this)
+        loadPlugin(file, this)
     } catch (e: PluginLoadException) {
         log(PluginLoadError(name, e.message))
-        return false
+        return null
     }
     if (plugin.name in plugins) {
         log(PluginAlreadyEnabled(plugin.name))
-        return false
+        return null
     }
     if (plugin.init(this)) {
         plugins[plugin.name] = plugin
-        return true
+        return plugin
     }
-    return false
+    return null
 }
 
-suspend fun Context.enablePlugins(vararg names: String): List<String> {
-    return names.filter { enablePlugin(it) }
+suspend fun Context.enablePlugins(vararg names: String): List<Plugin> {
+    return names.mapNotNull { enablePlugin(it) }
 }
 
-suspend fun Context.disablePlugin(name: String): Boolean {
-    val plugin = plugins[name]
+suspend fun Context.disablePlugin(name: String): Plugin? {
+    val plugin = plugins.search(name)
     if (plugin == null) {
         log(PluginNotEnabled(name))
-        return false
+        return null
     }
     plugins -= name
     plugin.close(this)
-    return true
+    return plugin
 }
 
-suspend fun Context.disablePlugins(vararg names: String): List<String> {
-    return names.filter { disablePlugin(it) }
+suspend fun Context.disablePlugins(vararg names: String): List<Plugin> {
+    return names.mapNotNull { disablePlugin(it) }
+}
+
+suspend fun Context.reloadPlugin(name: String): Plugin? {
+    val plugin = plugins.search(name)
+    if (plugin == null) {
+        log(PluginNotEnabled(name))
+        return null
+    }
+    plugins -= name
+    plugin.close(this)
+    val reloadedPlugin = try {
+        loadPlugin(plugin.file, this)
+    } catch (e: PluginLoadException) {
+        log(PluginLoadError(name, e.message))
+        return null
+    }
+    if (plugin.name in plugins) {
+        log(PluginAlreadyEnabled(plugin.name))
+        return null
+    }
+    if (plugin.init(this)) {
+        plugins[plugin.name] = plugin
+        return reloadedPlugin
+    }
+    return null
+}
+
+suspend fun Context.reloadPlugins(vararg names: String): List<Plugin> {
+    return names.mapNotNull { reloadPlugin(it) }
 }
 
 fun Context.addDefaultConsoleCommands() = commands.putAll(arrayOf(

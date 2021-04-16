@@ -25,6 +25,7 @@ suspend fun Plugins.loadPlugins(directory: File, context: Context) = withContext
 }
 
 suspend fun loadPlugin(file: File, context: Context): Plugin = withContext(Dispatchers.IO) {
+    if (!file.exists()) throw PluginLoadException("Plugin not found")
     val url = file.toURI().toURL()
     val loader = URLClassLoader(arrayOf(url))
     val pluginInfo = Properties().apply {
@@ -46,14 +47,19 @@ suspend fun loadPlugin(file: File, context: Context): Plugin = withContext(Dispa
     }
 }
 
-suspend fun findPluginsNames(directory: File): Sequence<String> = withContext(Dispatchers.IO) {
+suspend fun File.findPluginsNames(): Sequence<String> = withContext(Dispatchers.IO) {
     sequence {
-        directory.listFiles()?.forEach {
+        listFiles()?.forEach {
             if (it.isFile && it.extension == "jar") {
                 yield(it.nameWithoutExtension)
             }
         }
     }
+}
+
+suspend fun File.search(name: String): File? {
+    val plugin = findPluginsNames().firstOrNull { it.startsWith(name, ignoreCase = true) }
+    return if (plugin == null) null else resolve("$plugin.jar")
 }
 
 class PluginLoadException(override val message: String) : Exception(message)

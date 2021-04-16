@@ -1,7 +1,5 @@
 package com.github.ageofwar.botkit
 
-import com.github.ageofwar.botkit.files.PluginLoadException
-import com.github.ageofwar.botkit.files.loadPlugin
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -80,15 +78,16 @@ class EnablePluginCommand(private val context: Context) : ConsoleCommand {
             return handle(name)
         }
         val pluginName = args.removeSuffix(".jar")
-        if (context.enablePlugin(pluginName)) {
-            context.log(PluginEnabled(pluginName))
+        val plugin = context.enablePlugin(pluginName)
+        if (plugin != null) {
+            context.log(PluginEnabled(plugin.name))
             context.reloadCommands()
         }
     }
     
     private suspend fun handle(name: String) {
         val enabled = context.enablePlugins(*context.getAvailablePlugins().toList().toTypedArray())
-        context.log(PluginsEnabled(enabled))
+        context.log(PluginsEnabled(enabled.map { it.name }))
         context.reloadCommands()
     }
     
@@ -114,21 +113,21 @@ class EnablePluginCommand(private val context: Context) : ConsoleCommand {
 class DisablePluginCommand(private val context: Context) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) {
         if (args.isEmpty()) {
-            context.log(Usage(name))
-            return
+            return context.log(Usage(name))
         }
         if (args == "*") {
             return handle(name)
         }
-        if (context.disablePlugin(args)) {
-            context.log(PluginDisabled(args))
+        val plugin = context.disablePlugin(args)
+        if (plugin != null) {
+            context.log(PluginDisabled(plugin.name))
             context.reloadCommands()
         }
     }
     
     private suspend fun handle(name: String) {
         val disabled = context.disablePlugins(*context.plugins.keys.toTypedArray())
-        context.log(PluginsDisabled(disabled))
+        context.log(PluginsDisabled(disabled.map { it.name }))
         context.reloadCommands()
     }
     
@@ -168,46 +167,17 @@ class ReloadPluginsCommand(private val context: Context) : ConsoleCommand {
         if (args.isEmpty() || args == "*") {
             handle(name)
         } else {
-            val plugin = context.plugins[args] ?: return context.log(PluginNotEnabled(args))
-            context.plugins -= args
-            plugin.close(context)
-            val reloadedPlugin = try {
-                loadPlugin(plugin.file, context)
-            } catch (e: PluginLoadException) {
-                return context.log(PluginLoadError(plugin.file.nameWithoutExtension, e.message))
-            }
-            if (reloadedPlugin.init(context)) {
-                context.plugins[args] = reloadedPlugin
-                context.log(PluginReloaded(args))
+            val plugin = context.reloadPlugin(args)
+            if (plugin != null) {
+                context.log(PluginReloaded(plugin.name))
             }
         }
         context.reloadCommands()
     }
     
     private suspend fun handle(name: String) {
-        val enabledPlugins = context.plugins.mapValues { it.value.file }
-        enabledPlugins.forEach { (name, _) ->
-            val plugin = context.plugins[name]
-            if (plugin != null) {
-                context.plugins -= name
-                plugin.close(context)
-            }
-        }
-        val reloadedPlugins = enabledPlugins.filter { (name, file) ->
-            val plugin = try {
-                loadPlugin(file, context)
-            } catch (e: PluginLoadException) {
-                context.log(PluginLoadError(file.nameWithoutExtension, e.message))
-                return@filter false
-            }
-            if (plugin.init(context)) {
-                context.plugins[name] = plugin
-                true
-            } else {
-                false
-            }
-        }
-        context.log(PluginsReloaded(reloadedPlugins.keys))
+        val reloadedPlugins = context.reloadPlugins(*context.plugins.keys.toTypedArray())
+        context.log(PluginsReloaded(reloadedPlugins.map { it.name }))
     }
     
     data class PluginReloaded(val plugin: String) : LoggerEvent {
