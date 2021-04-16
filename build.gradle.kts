@@ -38,6 +38,7 @@ tasks {
         archiveClassifier.set("lib")
         exclude("**/botkit/*.class")
         exclude("**/botkit/files/**")
+        exclude("kotlin/**")
         exclude("**/javastringtemplate/**")
         from(configurations.compileClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
         with(getByName("jar") as CopySpec)
