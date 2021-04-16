@@ -21,7 +21,7 @@ where options include:
     -? -h -help prints this help message to the output stream
 ```
 
-#Example
+# Example
 ![example](example.png)
 
 # Plugin Example
