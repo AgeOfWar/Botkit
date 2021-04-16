@@ -80,8 +80,9 @@ class FileLogger(
 @SerialName("telegram")
 class TelegramLogger(
     private val token: String,
-    @SerialName("api_url") private val apiUrl: String,
-    private val chat: Long
+    @SerialName("api_url") private val apiUrl: String = "https://api.telegram.org",
+    private val chat: Long,
+    @SerialName("disable_notification") private val disableNotification: Boolean = true
 ) : Logger() {
     @Transient lateinit var api: TelegramApi
     
@@ -91,7 +92,7 @@ class TelegramLogger(
     }
     
     override suspend fun log(message: String) {
-        api.sendMessage(ChatId.fromId(chat), TextContent(Text(message)), disableNotification = true)
+        api.sendMessage(ChatId.fromId(chat), TextContent(Text(message)), disableNotification = disableNotification)
     }
     
     override suspend fun close() = withContext(Dispatchers.IO) {
