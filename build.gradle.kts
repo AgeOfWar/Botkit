@@ -40,7 +40,6 @@ tasks {
         exclude("**/botkit/files/**")
         exclude("kotlin/**")
         exclude("**/javastringtemplate/**")
-        from(configurations.compileClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
         with(getByName("jar") as CopySpec)
     }
     
@@ -53,10 +52,6 @@ tasks {
     
     compileKotlin {
         kotlinOptions.jvmTarget = "11"
-    }
-    
-    named("build") {
-        dependsOn("libJar")
     }
 }
 
