@@ -1,7 +1,10 @@
 package com.github.ageofwar.botkit.plugin
 
 import com.github.ageofwar.botkit.*
+import com.github.ageofwar.botkit.files.readFileAs
+import com.github.ageofwar.botkit.files.readFileOrCopy
 import com.github.ageofwar.ktelegram.UpdateHandler
+import kotlinx.serialization.json.Json
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
@@ -12,9 +15,14 @@ abstract class Plugin {
     lateinit var name: String internal set
     lateinit var dataFolder: File internal set
     lateinit var file: File internal set
+    val json = Json {
+        isLenient = true
+        encodeDefaults = true
+        ignoreUnknownKeys = true
+        prettyPrint = true
+    }
     
     internal lateinit var context: Context
-    
     internal val oldUpdateHandlers = CopyOnWriteArrayList<UpdateHandler>()
     internal val updateHandlers = CopyOnWriteArrayList<UpdateHandler>()
     internal val commands = ConcurrentHashMap<String, String>()
@@ -37,16 +45,29 @@ abstract class Plugin {
     fun warning(message: String?) = context.pluginWarning(this, message)
     fun error(message: String?, throwable: Throwable? = null) = context.pluginError(this, message, throwable)
     
-    fun <T : Plugin, R> withPlugin(`class`: Class<out T>, block: T.() -> R): R {
+    private inline fun <T : Plugin, R> withPlugin(`class`: Class<out T>, block: T.() -> R): R {
         val plugin = context.plugins.values.filterIsInstance(`class`).firstOrNull()
             ?: throw PluginNotFoundException(`class`)
         return plugin.block()
     }
     fun <T : Plugin, R> withPlugin(`class`: KClass<out T>, block: T.() -> R) = withPlugin(`class`.java, block)
     inline fun <reified T : Plugin, R> withPlugin(noinline block: T.() -> R): R = withPlugin(T::class, block)
+    
+    suspend inline fun <reified T> readFileAs(
+        file: String,
+        crossinline exceptionHandler: (Throwable) -> T
+    ): T = json.readFileAs(dataFolder.resolve(file), exceptionHandler)
+    suspend inline fun <reified T> readFileAs(
+        file: String,
+        default: T,
+        crossinline exceptionHandler: (Throwable) -> T
+    ): T = json.readFileAs(dataFolder.resolve(file), default, exceptionHandler)
+    suspend inline fun <reified T> readFileOrCopy(
+        file: String,
+        defaultPath: String,
+        crossinline exceptionHandler: (Throwable) -> T
+    ): T = json.readFileOrCopy(dataFolder.resolve(file), defaultPath, javaClass.classLoader, exceptionHandler)
 }
-
-
 
 class PluginNotFoundException(`class`: Class<*>) : Exception("Plugin $`class` not found")
 

@@ -28,9 +28,13 @@ suspend inline fun <reified T> Json.readFileAs(
     crossinline exceptionHandler: (Throwable) -> T
 ): T = withContext(Dispatchers.IO) {
     if (!file.exists()) {
-        file.parentFile?.mkdirs()
-        file.writeText(encodeToString(default))
-        default
+        try {
+            file.parentFile?.mkdirs()
+            file.writeText(encodeToString(default))
+            default
+        } catch (e: Throwable) {
+            exceptionHandler(e)
+        }
     } else {
         readFileAs(file, exceptionHandler)
     }
@@ -39,13 +43,18 @@ suspend inline fun <reified T> Json.readFileAs(
 suspend inline fun <reified T> Json.readFileOrCopy(
     file: File,
     defaultPath: String,
+    classLoader: ClassLoader = currentThread().contextClassLoader,
     crossinline exceptionHandler: (Throwable) -> T
 ): T = withContext(Dispatchers.IO) {
     if (!file.exists()) {
-        file.parentFile?.mkdirs()
-        currentThread().contextClassLoader.getResourceAsStream("config/$defaultPath")?.use {
-            Files.copy(it, Paths.get(file.path))
-        } ?: throw FileNotFoundException("cannot find resource on config/$defaultPath")
+        try {
+            file.parentFile?.mkdirs()
+            classLoader.getResourceAsStream("config/$defaultPath")?.use {
+                Files.copy(it, Paths.get(file.path))
+            } ?: throw FileNotFoundException("cannot find resource on config/$defaultPath")
+        } catch (e: Throwable) {
+            exceptionHandler(e)
+        }
     }
     readFileAs(file, exceptionHandler)
 }
