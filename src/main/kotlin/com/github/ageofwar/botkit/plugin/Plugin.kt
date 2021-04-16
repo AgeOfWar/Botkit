@@ -46,6 +46,8 @@ abstract class Plugin {
     inline fun <reified T : Plugin, R> withPlugin(noinline block: T.() -> R): R = withPlugin(T::class, block)
 }
 
+
+
 class PluginNotFoundException(`class`: Class<*>) : Exception("Plugin $`class` not found")
 
 fun Plugin.registerOldUpdateHandlers(vararg handlers: UpdateHandler) = handlers.forEach { registerOldUpdateHandler(it) }

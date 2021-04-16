@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "1.4.30"
     kotlin("plugin.serialization") version "1.4.30"
     application
+    `maven-publish`
 }
 
 group = "com.github.ageofwar"
@@ -24,12 +25,22 @@ dependencies {
 }
 
 tasks {
-    withType<Jar> {
+    named<Jar>("jar") {
         manifest {
             attributes("Main-Class" to "com.github.ageofwar.botkit.MainKt")
         }
         
         from(configurations.compileClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+    }
+    
+    register<Jar>("libJar") {
+        includeEmptyDirs = false
+        archiveClassifier.set("lib")
+        exclude("**/botkit/*.class")
+        exclude("**/botkit/files/**")
+        exclude("**/javastringtemplate/**")
+        from(configurations.compileClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+        with(getByName("jar") as CopySpec)
     }
     
     named<JavaExec>("run") {
@@ -41,5 +52,20 @@ tasks {
     
     compileKotlin {
         kotlinOptions.jvmTarget = "11"
+    }
+    
+    named("build") {
+        dependsOn("libJar")
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            artifact(tasks["libJar"]) {
+                this.classifier = ""
+            }
+            artifact(tasks["kotlinSourcesJar"])
+        }
     }
 }
