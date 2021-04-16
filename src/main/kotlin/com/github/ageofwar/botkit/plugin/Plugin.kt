@@ -37,8 +37,8 @@ abstract class Plugin {
     fun registerCommand(name: String, description: String) = commands.put(name, description)
     fun reloadCommands() = context.reloadCommands()
     
-    suspend fun dispatchConsoleCommand(input: String, unknownCommand: ConsoleCommand = UnknownCommand(context.logger)) {
-        handleCommand(input, context, unknownCommand)
+    suspend fun dispatchConsoleCommand(input: String) {
+        handleCommand(input, context)
     }
     
     fun log(message: String?) = context.pluginLog(this, message)
