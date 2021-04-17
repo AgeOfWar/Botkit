@@ -24,6 +24,15 @@ where options include:
 # Example
 ![example](example.png)
 
+# Available commands
+```text
+disable <plugin|*>  - disables plugin or all plugins
+enable <plugin|*>   - enables plugin or all plugins
+reload [reload|*]   - reloads plugin or all plugins
+plugins             - shows enabled and available plugins
+stop                - stops botkit
+```
+
 # Plugin Example
 This plugin re-sends messages
 
