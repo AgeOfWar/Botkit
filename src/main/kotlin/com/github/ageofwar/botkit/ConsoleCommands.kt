@@ -2,6 +2,8 @@ package com.github.ageofwar.botkit
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.ClosedSendChannelException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 typealias ConsoleCommands = MutableMap<String, ConsoleCommand>
@@ -11,14 +13,9 @@ interface ConsoleCommand {
 }
 
 suspend fun listenCommands(context: Context, unknownCommand: ConsoleCommand = UnknownCommand(context.logger)) {
-    while (true) {
-        val input = withContext(Dispatchers.IO) {
-            readLine()
-        }?.trim() ?: break
+    for (input in context.consoleCommandChannel) {
         try {
             handleCommand(input, context, unknownCommand)
-        } catch (_: StopRequest) {
-            break
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
@@ -27,22 +24,40 @@ suspend fun listenCommands(context: Context, unknownCommand: ConsoleCommand = Un
     }
 }
 
-suspend fun handleCommand(input: String, context: Context, unknownCommand: ConsoleCommand = UnknownCommand(context.logger)) {
-    val parts = input.split(Regex("\\s+"), limit = 2)
+suspend fun sendCommands(context: Context) {
+    while (!context.consoleCommandChannel.isClosedForSend) {
+        val input = withContext(Dispatchers.IO) {
+            if (System.`in`.available() != 0) {
+                readLine()
+            } else {
+                null
+            }
+        }
+        if (input == null) {
+            delay(100)
+            continue
+        }
+        try {
+            context.consoleCommandChannel.send(input)
+        } catch (e: ClosedSendChannelException) {
+            break
+        }
+    }
+}
+
+private suspend fun handleCommand(input: String, context: Context, unknownCommand: ConsoleCommand = UnknownCommand(context.logger)) {
+    val parts = input.trim().split(Regex("\\s+"), limit = 2)
+    if (parts[0].isEmpty()) return
     context.log(CommandReceived(input))
     val name = parts[0]
     val args = if (parts.size > 1) parts[1] else ""
     val command = context.commands[name] ?: unknownCommand
     try {
         command.handle(name, args)
-    } catch (e: StopRequest) {
-        throw e
     } catch (e: Throwable) {
         context.log(CommandError(input, e))
     }
 }
-
-object StopRequest : Throwable()
 
 class UnknownCommand(private val logger: Loggers) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) {
@@ -56,10 +71,10 @@ class UnknownCommand(private val logger: Loggers) : ConsoleCommand {
     }
 }
 
-class StopCommand(private val logger: Loggers) : ConsoleCommand {
+class StopCommand(private val context: Context) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) {
-        logger.log(StopCommand)
-        throw StopRequest
+        context.consoleCommandChannel.close()
+        context.log(StopCommand)
     }
     
     object StopCommand : LoggerEvent {

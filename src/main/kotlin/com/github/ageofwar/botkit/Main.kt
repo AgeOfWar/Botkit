@@ -6,6 +6,7 @@ import com.github.ageofwar.botkit.plugin.Plugin
 import com.github.ageofwar.ktelegram.TelegramApi
 import com.github.ageofwar.ktelegram.getMe
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerializationException
@@ -26,8 +27,10 @@ fun main(vararg args: String) = runBlocking {
     val api = TelegramApi(token, apiUrl)
     val bot = api.getMe()
     val plugins = ConcurrentHashMap<String, Plugin>()
+    val pluginsDirectory = File(workingDirectory, "plugins")
     val commands = ConcurrentHashMap<String, ConsoleCommand>()
-    val context = Context(api, logger, this, plugins, File(workingDirectory, "plugins"), commands)
+    val consoleCommandChannel = Channel<String>()
+    val context = Context(api, logger, this, plugins, pluginsDirectory, commands, consoleCommandChannel)
     context.addDefaultConsoleCommands()
     plugins.loadPlugins(workingDirectory, context)
     logger.use {
@@ -35,6 +38,7 @@ fun main(vararg args: String) = runBlocking {
         context.reloadCommands()
         logger.log(BotStart(bot))
         val job = launch { botkit(api, logger, botkit, plugins) }
+        launch { sendCommands(context) }
         listenCommands(context)
         logger.log(BotStop(bot))
         job.cancelAndJoin()

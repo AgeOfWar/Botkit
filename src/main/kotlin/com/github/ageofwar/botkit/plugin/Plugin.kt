@@ -38,7 +38,7 @@ abstract class Plugin {
     fun reloadCommands() = context.reloadCommands()
     
     suspend fun dispatchConsoleCommand(input: String) {
-        handleCommand(input, context)
+        context.consoleCommandChannel.send(input)
     }
     
     fun log(message: String?) = context.pluginLog(this, message)

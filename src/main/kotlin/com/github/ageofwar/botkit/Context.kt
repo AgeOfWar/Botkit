@@ -10,6 +10,7 @@ import com.github.ageofwar.ktelegram.TelegramApi
 import com.github.ageofwar.ktelegram.setMyCommands
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -19,7 +20,8 @@ data class Context(
     val scope: CoroutineScope,
     val plugins: Plugins,
     val pluginsDirectory: File,
-    val commands: ConsoleCommands
+    val commands: ConsoleCommands,
+    val consoleCommandChannel: Channel<String>
 )
 
 suspend fun Context.getAvailablePlugins() = pluginsDirectory.findPluginsNames()
@@ -96,7 +98,7 @@ suspend fun Context.reloadPlugins(vararg names: String): List<Plugin> {
 }
 
 fun Context.addDefaultConsoleCommands() = commands.putAll(arrayOf(
-    "stop" to StopCommand(logger),
+    "stop" to StopCommand(this),
     "enable" to EnablePluginCommand(this),
     "disable" to DisablePluginCommand(this),
     "plugins" to PluginsCommand(this),
