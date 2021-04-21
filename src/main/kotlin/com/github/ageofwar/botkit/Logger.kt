@@ -1,7 +1,7 @@
 package com.github.ageofwar.botkit
 
 import com.github.ageofwar.botkit.files.template
-import com.github.ageofwar.ktelegram.*
+import com.github.ageofwar.botkit.plugin.Plugin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.*
@@ -77,35 +77,19 @@ class FileLogger(
 }
 
 @Serializable
-@SerialName("telegram")
-class TelegramLogger(
-    private val token: String,
-    @SerialName("api_url") private val apiUrl: String = "https://api.telegram.org",
-    private val chat: Long,
-    @SerialName("disable_notification") private val disableNotification: Boolean = true
-) : Logger() {
-    @Transient lateinit var api: TelegramApi
-    
-    override suspend fun init() {
-        api = TelegramApi(token, apiUrl)
-        api.getMe()
-    }
-    
+@SerialName("plugins")
+class PluginsLogger(@Contextual private val plugins: MutableMap<String, @Contextual Plugin>) : Logger() {
     override suspend fun log(message: String) {
-        api.sendMessage(ChatId.fromId(chat), TextContent(Text(message)), disableNotification = disableNotification)
-    }
-    
-    override suspend fun close() = withContext(Dispatchers.IO) {
-        api.close()
+        plugins.forEach { (_, plugin) ->
+            plugin.loggers.forEach {
+                it.log(message)
+            }
+        }
     }
 }
 
-internal class PrefixSerializer(private val prefix: String) : KSerializer<String> {
-    override val descriptor = PrimitiveSerialDescriptor("prefix", PrimitiveKind.STRING)
-    
-    override fun deserialize(decoder: Decoder) = "$prefix/${decoder.decodeString()}"
-    
-    override fun serialize(encoder: Encoder, value: String) {
-        encoder.encodeString(value.removePrefix(prefix))
-    }
+internal class PluginsSerializer(private val plugins: Plugins) : KSerializer<Plugins> {
+    override val descriptor = PrimitiveSerialDescriptor("plugins", PrimitiveKind.BOOLEAN)
+    override fun deserialize(decoder: Decoder) = plugins
+    override fun serialize(encoder: Encoder, value: Plugins) = Unit
 }

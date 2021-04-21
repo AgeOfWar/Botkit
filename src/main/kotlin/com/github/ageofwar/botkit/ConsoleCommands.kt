@@ -12,7 +12,7 @@ interface ConsoleCommand {
     suspend fun handle(name: String, args: String)
 }
 
-suspend fun listenCommands(context: Context, unknownCommand: ConsoleCommand = UnknownCommand(context.logger)) {
+suspend fun listenCommands(context: Context, unknownCommand: ConsoleCommand = OtherPluginsCommand(context)) {
     for (input in context.consoleCommandChannel) {
         try {
             handleCommand(input, context, unknownCommand)
@@ -205,5 +205,32 @@ class ReloadPluginsCommand(private val context: Context) : ConsoleCommand {
         override fun message(format: Strings) = format.commands.reload.pluginsReloaded
         override val category = "Botkit"
         override val level = "INFO"
+    }
+}
+
+class OtherPluginsCommand(
+    private val context: Context,
+    private val unknownCommand: ConsoleCommand = UnknownCommand(context.logger)
+) : ConsoleCommand {
+    override suspend fun handle(name: String, args: String) {
+        val nameParts = name.split('/', limit = 2)
+        if (nameParts.size == 1) {
+            val plugins = context.plugins.values.filter { it.consoleCommands.containsKey(name) }
+            when (plugins.size) {
+                0 -> unknownCommand.handle(name, args)
+                1 -> plugins[0].consoleCommands[name]?.handle(name, args)
+                else -> context.log(Conflict(name, plugins.map { it.name }))
+            }
+        } else {
+            val (pluginName, commandName) = nameParts
+            val plugin = context.plugins[pluginName] ?: return context.log(PluginNotEnabled(pluginName))
+            plugin.consoleCommands[commandName]?.handle(name, args) ?: unknownCommand.handle(name, args)
+        }
+    }
+    
+    data class Conflict(val name: String, val plugins: Iterable<String>) : LoggerEvent {
+        override fun message(format: Strings) = format.commands.conflict
+        override val category = "Botkit"
+        override val level = "WARNING"
     }
 }

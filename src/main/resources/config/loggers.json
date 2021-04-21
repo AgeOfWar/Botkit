@@ -48,7 +48,8 @@
       "reload": {
         "plugin_reloaded": "Plugin '$plugin' successfully reloaded",
         "plugins_reloaded": "Plugins [${plugins?join(, )}] successfully reloaded"
-      }
+      },
+      "conflict": "Command conflict, please use ${plugins?join(/ or )}/ as command prefix"
     }
   }
 }

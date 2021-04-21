@@ -27,7 +27,8 @@ data class Strings(
         val enable: Enable,
         val disable: Disable,
         val plugins: Plugins,
-        val reload: Reload
+        val reload: Reload,
+        val conflict: String?
     ) {
         @Serializable
         data class Unknown(

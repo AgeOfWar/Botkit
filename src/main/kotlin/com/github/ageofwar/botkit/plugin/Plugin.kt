@@ -26,6 +26,8 @@ abstract class Plugin {
     internal val oldUpdateHandlers = CopyOnWriteArrayList<UpdateHandler>()
     internal val updateHandlers = CopyOnWriteArrayList<UpdateHandler>()
     internal val commands = ConcurrentHashMap<String, String>()
+    internal val loggers = CopyOnWriteArrayList<PluginLogger>()
+    internal val consoleCommands = ConcurrentHashMap<String, ConsoleCommand>()
     
     open suspend fun init() {}
     open suspend fun close() {}
@@ -35,6 +37,12 @@ abstract class Plugin {
     fun registerUpdateHandler(handler: UpdateHandler) = updateHandlers.add(handler)
     fun unregisterUpdateHandler(handler: UpdateHandler) = updateHandlers.remove(handler)
     fun registerCommand(name: String, description: String) = commands.put(name, description)
+    fun unregisterCommand(name: String) = commands.remove(name)
+    fun registerLogger(logger: PluginLogger) = loggers.add(logger)
+    fun unregisterLogger(logger: PluginLogger) = loggers.remove(logger)
+    fun registerConsoleCommand(name: String, handler: ConsoleCommand) = consoleCommands.put(name, handler)
+    fun unregisterConsoleCommand(name: String) = consoleCommands.remove(name)
+    
     fun reloadCommands() = context.reloadCommands()
     
     suspend fun dispatchConsoleCommand(input: String) {
@@ -76,8 +84,21 @@ fun Plugin.unregisterOldUpdateHandlers(vararg handlers: UpdateHandler) = handler
 fun Plugin.registerUpdateHandlers(vararg handlers: UpdateHandler) = handlers.forEach { registerUpdateHandler(it) }
 fun Plugin.unregisterUpdateHandlers(vararg handlers: UpdateHandler) = handlers.forEach { unregisterUpdateHandler(it) }
 fun Plugin.registerCommands(commands: Map<String, String>) = commands.forEach { (name, description) -> registerCommand(name, description) }
-fun Plugin.registerCommands(vararg commands: Pair<String, String>) = commands.forEach { (name, description) -> registerCommand(name, description) }
+fun Plugin.unregisterCommands(vararg commands: String) = commands.forEach { unregisterCommand(it) }
 fun Plugin.registerAndReloadCommands(commands: Map<String, String>) {
     commands.forEach { (name, description) -> registerCommand(name, description) }
     reloadCommands()
+}
+fun Plugin.registerLoggers(vararg loggers: PluginLogger) = loggers.forEach { registerLogger(it) }
+fun Plugin.unregisterLoggers(vararg loggers: PluginLogger) = loggers.forEach { unregisterLogger(it) }
+fun Plugin.registerConsoleCommands(commands: Map<String, ConsoleCommand>) =
+    commands.forEach { (name, handler) -> registerConsoleCommand(name, handler) }
+fun Plugin.unregisterConsoleCommands(vararg names: String) = names.forEach { unregisterConsoleCommand(it) }
+
+interface PluginLogger {
+    suspend fun log(message: String)
+}
+
+interface PluginCommand {
+    suspend fun handle(name: String, args: String)
 }

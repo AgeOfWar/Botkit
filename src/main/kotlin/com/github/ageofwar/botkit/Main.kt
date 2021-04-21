@@ -18,21 +18,21 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.system.exitProcess
 
 fun main(vararg args: String) = runBlocking {
-    val (overrideToken, workingDirectory) = parseArgs(*args)
-    val json = buildJson(workingDirectory)
-    val logger = loadLogger(workingDirectory, json)
-    val (token, apiUrl) = loadBotConfig(workingDirectory, overrideToken, json)
+    val (overrideToken) = parseArgs(*args)
+    val plugins = ConcurrentHashMap<String, Plugin>()
+    val json = buildJson(plugins)
+    val logger = loadLogger(json)
+    val (token, apiUrl) = loadBotConfig(overrideToken, json)
     token ?: error("Insert 'bot_token' field into bot.json")
-    val botkit = loadBotkitConfig(workingDirectory, json)
+    val botkit = loadBotkitConfig(json)
     val api = TelegramApi(token, apiUrl)
     val bot = api.getMe()
-    val plugins = ConcurrentHashMap<String, Plugin>()
-    val pluginsDirectory = File(workingDirectory, "plugins")
+    val pluginsDirectory = File("plugins")
     val commands = ConcurrentHashMap<String, ConsoleCommand>()
     val consoleCommandChannel = Channel<String>()
     val context = Context(api, logger, this, plugins, pluginsDirectory, commands, consoleCommandChannel)
     context.addDefaultConsoleCommands()
-    plugins.loadPlugins(workingDirectory, context)
+    plugins.loadPlugins(context)
     logger.use {
         plugins.init(logger)
         context.reloadCommands()
@@ -46,9 +46,9 @@ fun main(vararg args: String) = runBlocking {
     }
 }
 
-private suspend fun Plugins.loadPlugins(workingDirectory: String, context: Context) {
+private suspend fun Plugins.loadPlugins(context: Context) {
     print("Loading plugins... ")
-    loadPlugins(File(workingDirectory, "plugins"), context)
+    loadPlugins(File("plugins"), context)
     when (size) {
         0 -> println("No plugin found")
         1 -> println("1 plugin found (${keys.single()})")
@@ -56,9 +56,9 @@ private suspend fun Plugins.loadPlugins(workingDirectory: String, context: Conte
     }
 }
 
-private suspend fun loadLogger(workingDirectory: String, json: Json): Loggers {
+private suspend fun loadLogger(json: Json): Loggers {
     print("Loading loggers... ")
-    val logger = json.readFileOrCopy<Loggers>(File(workingDirectory, "loggers.json"), "loggers.json") {
+    val logger = json.readFileOrCopy<Loggers>(File("loggers.json"), "loggers.json") {
         if (it is SerializationException) {
             error("Invalid loggers.json file. Please update loggers.json or delete it")
         } else {
@@ -69,9 +69,9 @@ private suspend fun loadLogger(workingDirectory: String, json: Json): Loggers {
     return logger
 }
 
-private suspend fun loadBotConfig(workingDirectory: String, overrideToken: String?, json: Json): BotConfig {
+private suspend fun loadBotConfig(overrideToken: String?, json: Json): BotConfig {
     print("Loading bot information... ")
-    val config = json.readFileOrCopy<BotConfig>(File(workingDirectory, "bot.json"), "bot.json") {
+    val config = json.readFileOrCopy<BotConfig>(File("bot.json"), "bot.json") {
         if (it is SerializationException) {
             error("Invalid bot.json file. Please update your bot.json or delete it")
         } else {
@@ -83,9 +83,9 @@ private suspend fun loadBotConfig(workingDirectory: String, overrideToken: Strin
     return config.copy(token = token)
 }
 
-private suspend fun loadBotkitConfig(workingDirectory: String, json: Json): BotkitConfig {
+private suspend fun loadBotkitConfig(json: Json): BotkitConfig {
     print("Loading bot configuration... ")
-    val botkit = json.readFileOrCopy<BotkitConfig>(File(workingDirectory, "botkit.json"), "botkit.json") {
+    val botkit = json.readFileOrCopy<BotkitConfig>(File("botkit.json"), "botkit.json") {
         if (it is SerializationException) {
             error("Invalid botkit.json file. Please update your botkit.json or delete it")
         } else {
@@ -115,12 +115,12 @@ private fun String.censureToken() = mapIndexed { i, c ->
     if (c == ':' || i > lastIndex - 3) c else '*'
 }.joinToString("")
 
-private fun buildJson(workingDirectory: String) = Json {
+private fun buildJson(plugins: Plugins) = Json {
     isLenient = true
     encodeDefaults = true
     ignoreUnknownKeys = true
     prettyPrint = true
     serializersModule = SerializersModule {
-        contextual(PrefixSerializer("$workingDirectory/"))
+        contextual(PluginsSerializer(plugins))
     }
 }
