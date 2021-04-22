@@ -37,7 +37,7 @@ tasks {
     
     register<Jar>("libFatJar") {
         includeEmptyDirs = false
-        archiveClassifier.set("lib-fat")
+        archiveClassifier.set("lib")
         exclude("**/botkit/*.class")
         exclude("**/botkit/files/**")
         exclude("kotlin/**")
@@ -46,7 +46,6 @@ tasks {
     }
     
     named<Jar>("jar") {
-        archiveClassifier.set("lib")
         include("**/botkit/plugin/**")
         includeEmptyDirs = false
     }
