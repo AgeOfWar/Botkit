@@ -27,7 +27,7 @@ abstract class Plugin {
     internal val updateHandlers = CopyOnWriteArrayList<UpdateHandler>()
     internal val commands = ConcurrentHashMap<String, String>()
     internal val loggers = CopyOnWriteArrayList<PluginLogger>()
-    internal val consoleCommands = ConcurrentHashMap<String, ConsoleCommand>()
+    internal val consoleCommands = ConcurrentHashMap<String, PluginCommand>()
     
     open suspend fun init() {}
     open suspend fun close() {}
@@ -40,7 +40,7 @@ abstract class Plugin {
     fun unregisterCommand(name: String) = commands.remove(name)
     fun registerLogger(logger: PluginLogger) = loggers.add(logger)
     fun unregisterLogger(logger: PluginLogger) = loggers.remove(logger)
-    fun registerConsoleCommand(name: String, handler: ConsoleCommand) = consoleCommands.put(name, handler)
+    fun registerConsoleCommand(name: String, handler: PluginCommand) = consoleCommands.put(name, handler)
     fun unregisterConsoleCommand(name: String) = consoleCommands.remove(name)
     
     fun reloadCommands() = context.reloadCommands()
@@ -91,7 +91,7 @@ fun Plugin.registerAndReloadCommands(commands: Map<String, String>) {
 }
 fun Plugin.registerLoggers(vararg loggers: PluginLogger) = loggers.forEach { registerLogger(it) }
 fun Plugin.unregisterLoggers(vararg loggers: PluginLogger) = loggers.forEach { unregisterLogger(it) }
-fun Plugin.registerConsoleCommands(commands: Map<String, ConsoleCommand>) =
+fun Plugin.registerConsoleCommands(commands: Map<String, PluginCommand>) =
     commands.forEach { (name, handler) -> registerConsoleCommand(name, handler) }
 fun Plugin.unregisterConsoleCommands(vararg names: String) = names.forEach { unregisterConsoleCommand(it) }
 
