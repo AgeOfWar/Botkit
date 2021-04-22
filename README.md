@@ -8,7 +8,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.AgeOfWar:Botkit:0.1'
+    implementation 'com.github.AgeOfWar:Botkit:0.3'
 }
 ```
 
@@ -17,7 +17,6 @@ dependencies {
 Usage: java -jar ${programFile.name} [options]
 where options include:
     -token=<token> overrides token in bot.json
-    -dir=<working directory> changes the working directory
     -? -h -help prints this help message to the output stream
 ```
 
