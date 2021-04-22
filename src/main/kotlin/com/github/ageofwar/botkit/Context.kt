@@ -59,7 +59,7 @@ suspend fun Context.disablePlugin(name: String): Plugin? {
         log(PluginNotEnabled(name))
         return null
     }
-    plugins -= name
+    plugins -= plugin.name
     plugin.close(this)
     return plugin
 }
@@ -74,12 +74,12 @@ suspend fun Context.reloadPlugin(name: String): Plugin? {
         log(PluginNotEnabled(name))
         return null
     }
-    plugins -= name
+    plugins -= plugin.name
     plugin.close(this)
     val reloadedPlugin = try {
         loadPlugin(plugin.file, this)
     } catch (e: PluginLoadException) {
-        log(PluginLoadError(name, e.message))
+        log(PluginLoadError(plugin.name, e.message))
         return null
     }
     if (plugin.name in plugins) {
