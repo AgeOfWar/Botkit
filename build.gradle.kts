@@ -25,28 +25,18 @@ dependencies {
 }
 
 tasks {
-    named<Jar>("jar") {
+    register<Jar>("fatJar") {
         manifest {
             attributes("Main-Class" to "com.github.ageofwar.botkit.MainKt")
         }
         includeEmptyDirs = false
-        enabled = false
-        archiveClassifier.set("ignored")
-    }
-    
-    register<Jar>("fatJar") {
         archiveClassifier.set("fat")
         from(configurations.compileClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
-        with(getByName("jar") as CopySpec)
-    }
-    
-    register<Jar>("libJar") {
-        archiveClassifier.set("lib")
-        include("**/botkit/plugin/**")
-        with(getByName("jar") as CopySpec)
+        from(sourceSets.main.get().output)
     }
     
     register<Jar>("libFatJar") {
+        includeEmptyDirs = false
         archiveClassifier.set("lib-fat")
         exclude("**/botkit/*.class")
         exclude("**/botkit/files/**")
@@ -55,8 +45,14 @@ tasks {
         with(getByName("jar") as CopySpec)
     }
     
+    named<Jar>("jar") {
+        archiveClassifier.set("lib")
+        include("**/botkit/plugin/**")
+        includeEmptyDirs = false
+    }
+    
     named("build") {
-        dependsOn("fatJar", "libJar", "libFatJar")
+        dependsOn("fatJar", "libFatJar")
     }
     
     named<JavaExec>("run") {
@@ -75,9 +71,6 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["kotlin"])
-            artifact(tasks["libJar"]) {
-                classifier = ""
-            }
             artifact(tasks["kotlinSourcesJar"])
         }
     }
