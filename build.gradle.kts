@@ -61,6 +61,10 @@ tasks {
         }
     }
     
+    withType<GenerateModuleMetadata> {
+        enabled = false
+    }
+    
     compileKotlin {
         kotlinOptions.jvmTarget = "11"
     }
