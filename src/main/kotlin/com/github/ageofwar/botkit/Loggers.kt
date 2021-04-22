@@ -8,9 +8,15 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class SerializableLoggers(
+    @SerialName("log_format") val logFormat: String,
+    val loggers: List<Logger>,
+    val strings: Strings
+)
+
 class Loggers(
-    @SerialName("log_format") private val logFormat: String,
-    private vararg val loggers: Logger,
+    private val logFormat: String,
+    private val loggers: List<Logger>,
     val strings: Strings
 ) {
     suspend fun log(event: LoggerEvent) {

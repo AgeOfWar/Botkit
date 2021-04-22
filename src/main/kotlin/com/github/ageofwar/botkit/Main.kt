@@ -21,7 +21,7 @@ fun main(vararg args: String) = runBlocking {
     val (overrideToken) = parseArgs(*args)
     val plugins = ConcurrentHashMap<String, Plugin>()
     val json = buildJson(plugins)
-    val logger = loadLogger(json)
+    val logger = loadLogger(plugins, json)
     val (token, apiUrl) = loadBotConfig(overrideToken, json)
     token ?: error("Insert 'bot_token' field into bot.json")
     val botkit = loadBotkitConfig(json)
@@ -56,17 +56,18 @@ private suspend fun Plugins.loadPlugins(context: Context) {
     }
 }
 
-private suspend fun loadLogger(json: Json): Loggers {
+private suspend fun loadLogger(plugins: Plugins, json: Json): Loggers {
     print("Loading loggers... ")
-    val logger = json.readFileOrCopy<Loggers>(File("loggers.json"), "loggers.json") {
+    val logger = json.readFileOrCopy<SerializableLoggers>(File("loggers.json"), "loggers.json") {
         if (it is SerializationException) {
             error("Invalid loggers.json file. Please update loggers.json or delete it")
         } else {
             throw RuntimeException("An error occurred while loading loggers", it)
         }
     }
+    val loggers = logger.loggers + PluginsLogger(plugins)
     println("Done")
-    return logger
+    return Loggers(logger.logFormat, loggers, logger.strings)
 }
 
 private suspend fun loadBotConfig(overrideToken: String?, json: Json): BotConfig {

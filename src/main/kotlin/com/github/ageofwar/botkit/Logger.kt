@@ -1,7 +1,6 @@
 package com.github.ageofwar.botkit
 
 import com.github.ageofwar.botkit.files.template
-import com.github.ageofwar.botkit.plugin.Plugin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.*
@@ -76,9 +75,7 @@ class FileLogger(
     }
 }
 
-@Serializable
-@SerialName("plugins")
-class PluginsLogger(@Contextual private val plugins: MutableMap<String, @Contextual Plugin>) : Logger() {
+class PluginsLogger(private val plugins: Plugins) : Logger() {
     override suspend fun log(message: String) {
         plugins.forEach { (_, plugin) ->
             plugin.loggers.forEach {
