@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.github.ageofwar"
-version = "0.3"
+version = "0.4"
 
 application {
     mainClass.set("com.github.ageofwar.botkit.MainKt")
@@ -40,13 +40,16 @@ tasks {
         archiveClassifier.set("lib")
         exclude("**/botkit/*.class")
         exclude("**/botkit/files/**")
+        exclude("config/**")
         exclude("kotlin/**")
         from(configurations.compileClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
         with(getByName("jar") as CopySpec)
     }
     
     named<Jar>("jar") {
-        include("**/botkit/plugin/**")
+        exclude("**/botkit/*.class")
+        exclude("**/botkit/files/**")
+        exclude("config/**")
         includeEmptyDirs = false
     }
     
