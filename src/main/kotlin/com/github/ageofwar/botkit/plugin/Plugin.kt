@@ -3,7 +3,9 @@ package com.github.ageofwar.botkit.plugin
 import com.github.ageofwar.botkit.*
 import com.github.ageofwar.botkit.files.readFileAs
 import com.github.ageofwar.botkit.files.readFileOrCopy
+import com.github.ageofwar.botkit.files.writeFile
 import com.github.ageofwar.ktelegram.UpdateHandler
+import io.github.ageofwar.javastringtemplate.StringTemplate
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
@@ -75,6 +77,11 @@ abstract class Plugin {
         defaultPath: String,
         crossinline exceptionHandler: (Throwable) -> T
     ): T = json.readFileOrCopy(dataFolder.resolve(file), defaultPath, javaClass.classLoader, exceptionHandler)
+    suspend inline fun <reified T> writeFile(
+        file: String,
+        content: T,
+        crossinline exceptionHandler: (Throwable) -> Unit
+    ): Unit = json.writeFile(dataFolder.resolve(file), content, exceptionHandler)
 }
 
 class PluginNotFoundException(`class`: Class<*>) : Exception("Plugin $`class` not found")
@@ -102,3 +109,5 @@ interface PluginLogger {
 interface PluginCommand {
     suspend fun handle(name: String, args: String)
 }
+
+fun String.template(args: Any?): String = StringTemplate.format(this, args)

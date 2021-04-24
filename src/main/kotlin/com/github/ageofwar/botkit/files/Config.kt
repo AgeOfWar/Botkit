@@ -59,4 +59,17 @@ suspend inline fun <reified T> Json.readFileOrCopy(
     readFileAs(file, exceptionHandler)
 }
 
+suspend inline fun <reified T> Json.writeFile(
+    file: File,
+    content: T,
+    crossinline exceptionHandler: (Throwable) -> Unit
+): Unit = withContext(Dispatchers.IO) {
+    try {
+        file.parentFile?.mkdirs()
+        file.writeText(encodeToString(content))
+    } catch (e: Throwable) {
+        exceptionHandler(e)
+    }
+}
+
 fun String.template(args: Any?): String = StringTemplate.format(this, args)
