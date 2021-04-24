@@ -84,6 +84,15 @@ abstract class Plugin {
     ): Unit = json.writeFile(dataFolder.resolve(file), content, exceptionHandler)
 }
 
+interface PluginLogger {
+    suspend fun log(message: String)
+}
+
+interface PluginCommand {
+    suspend fun handle(name: String, args: String)
+}
+
+class PluginException(message: String? = null, cause: Throwable? = null) : RuntimeException(message, cause)
 class PluginNotFoundException(`class`: Class<*>) : Exception("Plugin $`class` not found")
 
 fun Plugin.registerOldUpdateHandlers(vararg handlers: UpdateHandler) = handlers.forEach { registerOldUpdateHandler(it) }
@@ -102,12 +111,6 @@ fun Plugin.registerConsoleCommands(commands: Map<String, PluginCommand>) =
     commands.forEach { (name, handler) -> registerConsoleCommand(name, handler) }
 fun Plugin.unregisterConsoleCommands(vararg names: String) = names.forEach { unregisterConsoleCommand(it) }
 
-interface PluginLogger {
-    suspend fun log(message: String)
-}
-
-interface PluginCommand {
-    suspend fun handle(name: String, args: String)
-}
-
 fun String.template(args: Any?): String = StringTemplate.format(this, args)
+
+fun exception(message: String? = null, cause: Throwable? = null): Nothing = throw PluginException(message, cause)
