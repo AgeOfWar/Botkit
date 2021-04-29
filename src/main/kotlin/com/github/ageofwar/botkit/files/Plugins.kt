@@ -18,7 +18,7 @@ suspend fun Plugins.loadPlugins(directory: File, context: Context) = withContext
             val plugin = loadPlugin(it, context)
             put(plugin.name, plugin)
         } catch (e: PluginLoadException) {
-            val error = context.logger.strings.pluginLoadError?.template(PluginLoadError(it.nameWithoutExtension, e.message))
+            val error = context.logger.strings.pluginLoadError?.template("event" to PluginLoadError(it.nameWithoutExtension, e.message))
             System.err.println(error)
         }
     }

@@ -68,7 +68,7 @@ class FileLogger(
         var i = 0
         var fileName: String
         do {
-            fileName = this.fileName.template(mapOf("date" to currentTimeMillis(), "id" to i))
+            fileName = this.fileName.template("date" to currentTimeMillis(), "id" to i)
             i++
         } while (File(fileName).exists())
         return fileName

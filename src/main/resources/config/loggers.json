@@ -1,5 +1,5 @@
 {
-  "log_format": "[${date?date(yyyy-MM-dd HH:mm:ss)}][$category][$level] $message",
+  "log_format": "[${date?number_to_datetime?string[\"yyyy-MM-dd HH:mm:ss\"]}][${category}][${level}] ${message}",
   "loggers": [
     {
       "type": "console"
@@ -8,48 +8,48 @@
       "type": "file",
       "directory": "logs",
       "max_file_size": 10000,
-      "file_name": "${date?date(yyyyMMddHHmmss)}-$id.txt"
+      "file_name": "${date?number_to_datetime?string[\"yyyyMMddHHmmss\"]}-${id}.txt"
     }
   ],
   "strings": {
-    "bot_start": "Started ${bot.username}",
-    "bot_stop": "Stopping ${bot.username}",
+    "bot_start": "Started ${event.bot.username}",
+    "bot_stop": "Stopping ${event.bot.username}",
     "old_update": null,
     "new_update": null,
-    "plugin_load_error": "An error occurred while loading plugin '$plugin': $message",
-    "plugin_init_error": "An error occurred while initializing plugin '$plugin'",
-    "plugin_update_error": "An error occurred while handling an update $update",
-    "plugin_close_error": "An error occurred while disabling plugin '$plugin'",
-    "plugin_already_enabled": "Plugin '$plugin' is already enabled",
-    "plugin_not_enabled": "Plugin '$plugin' is not enabled",
-    "command_received": "$input",
-    "command_error": "An error occurred while handling command '$input'",
+    "plugin_load_error": "An error occurred while loading plugin '${event.plugin}': $message",
+    "plugin_init_error": "An error occurred while initializing plugin '${event.plugin}'",
+    "plugin_update_error": "An error occurred while handling an update ${event.update}",
+    "plugin_close_error": "An error occurred while disabling plugin '${event.plugin}'",
+    "plugin_already_enabled": "Plugin '${event.plugin}' is already enabled",
+    "plugin_not_enabled": "Plugin '${event.plugin}' is not enabled",
+    "command_received": "${event.input}",
+    "command_error": "An error occurred while handling command '${event.input}'",
     "commands_reload_error": "An error occurred while reloading telegram commands",
     "commands": {
       "unknown": {
-        "message": "Unknown command '$name'"
+        "message": "Unknown command '${event.name}'"
       },
       "stop": {
         "message": null
       },
       "enable": {
-        "usage": "Usage: $name <plugin name>",
-        "plugin_enabled": "Plugin '$plugin' is now enabled",
-        "plugins_enabled": "Plugins [${plugins?join(, )}] are now enabled"
+        "usage": "Usage: ${name} <plugin name>",
+        "plugin_enabled": "Plugin '${event.plugin}' is now enabled",
+        "plugins_enabled": "Plugins [${event.plugins?join(\", \")}] are now enabled"
       },
       "disable": {
-        "usage": "Usage: $name <plugin name>",
-        "plugin_disabled": "Plugin '$plugin' is now disabled",
-        "plugins_disabled": "Plugins [${plugins?join(, )}] are now disabled"
+        "usage": "Usage: ${name} <plugin name>",
+        "plugin_disabled": "Plugin '${event.plugin}' is now disabled",
+        "plugins_disabled": "Plugins [${event.plugins?join(\", \")}] are now disabled"
       },
       "plugins": {
-        "message": "Enabled plugins: [${enabled?join(, )}], Available plugins: [${available?join(, )}]"
+        "message": "Enabled plugins: [${event.enabled?join(\", \")}], Available plugins: [${event.available?join(\", \")}]"
       },
       "reload": {
-        "plugin_reloaded": "Plugin '$plugin' successfully reloaded",
-        "plugins_reloaded": "Plugins [${plugins?join(, )}] successfully reloaded"
+        "plugin_reloaded": "Plugin '${event.plugin}' successfully reloaded",
+        "plugins_reloaded": "Plugins [${event.plugins?join(\", \")}] successfully reloaded"
       },
-      "conflict": "Command conflict, please use ${plugins?join(/ or )}/ as command prefix"
+      "conflict": "Command conflict, please use ${event.plugins?join(\"/ or \")}/ as command prefix"
     }
   }
 }

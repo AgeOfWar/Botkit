@@ -5,9 +5,11 @@ import com.github.ageofwar.botkit.files.readFileAs
 import com.github.ageofwar.botkit.files.readFileOrCopy
 import com.github.ageofwar.botkit.files.writeFile
 import com.github.ageofwar.ktelegram.UpdateHandler
-import io.github.ageofwar.javastringtemplate.StringTemplate
+import freemarker.template.Configuration
+import freemarker.template.Template
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.io.StringWriter
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.reflect.KClass
@@ -111,6 +113,12 @@ fun Plugin.registerConsoleCommands(commands: Map<String, PluginCommand>) =
     commands.forEach { (name, handler) -> registerConsoleCommand(name, handler) }
 fun Plugin.unregisterConsoleCommands(vararg names: String) = names.forEach { unregisterConsoleCommand(it) }
 
-fun String.template(args: Any?): String = StringTemplate.format(this, args)
+fun String.template(vararg args: Pair<String, Any?>): String {
+    val reader = reader()
+    val writer = StringWriter()
+    val template = Template("Botkit", reader, Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS))
+    template.process(args.toMap(), writer)
+    return writer.toString()
+}
 
 fun exception(message: String? = null, cause: Throwable? = null): Nothing = throw PluginException(message, cause)

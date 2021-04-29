@@ -6,6 +6,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.lang.System.currentTimeMillis
 
 @Serializable
 data class SerializableLoggers(
@@ -20,20 +21,19 @@ class Loggers(
     val strings: Strings
 ) {
     suspend fun log(event: LoggerEvent) {
-        log(event.message(strings)?.template(event), event.category, event.level)
+        log(event.message(strings)?.template("event" to event), event.category, event.level)
         log(event.throwable?.stackTraceToString(), event.category, event.level)
     }
     
     suspend fun log(message: String, category: String, level: String) = supervisorScope {
         loggers.forEach {
             launch {
-                val args = mapOf(
+                it.log(logFormat.template(
                     "message" to message,
-                    "date" to java.util.Date(),
+                    "date" to currentTimeMillis(),
                     "category" to category,
                     "level" to level
-                )
-                it.log(logFormat.template(args))
+                ))
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.github.ageofwar.botkit.files
 
-import io.github.ageofwar.javastringtemplate.StringTemplate
+import freemarker.template.Configuration
+import freemarker.template.Template
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
@@ -8,6 +9,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.StringWriter
 import java.lang.Thread.currentThread
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -72,4 +74,10 @@ suspend inline fun <reified T> Json.writeFile(
     }
 }
 
-fun String.template(args: Any?): String = StringTemplate.format(this, args)
+fun String.template(vararg args: Pair<String, Any?>): String {
+    val reader = reader()
+    val writer = StringWriter()
+    val template = Template("Botkit", reader, Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS))
+    template.process(args.toMap(), writer)
+    return writer.toString()
+}
