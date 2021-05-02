@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.github.ageofwar"
-version = "0.5"
+version = "0.6"
 
 application {
     mainClass.set("com.github.ageofwar.botkit.MainKt")
@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    api("com.github.AgeOfWar:KTelegram:0.6")
+    api("com.github.AgeOfWar:KTelegram:0.7")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
     implementation("org.freemarker:freemarker:2.3.31")
 }
@@ -42,6 +42,7 @@ tasks {
         exclude("**/botkit/files/**")
         exclude("config/**")
         exclude("kotlin/**")
+        exclude("freemarker/**")
         from(configurations.compileClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
         with(getByName("jar") as CopySpec)
     }
@@ -50,6 +51,7 @@ tasks {
         exclude("**/botkit/*.class")
         exclude("**/botkit/files/**")
         exclude("config/**")
+        exclude("freemarker/**")
         includeEmptyDirs = false
     }
     
