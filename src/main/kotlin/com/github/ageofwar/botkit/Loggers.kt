@@ -20,7 +20,7 @@ class Loggers(
     private val logFormat: String,
     private val loggers: List<Logger>,
     private val verboseErrors: Boolean,
-    val strings: Strings
+    private val strings: Strings
 ) {
     suspend fun log(event: LoggerEvent) {
         if (verboseErrors) {
