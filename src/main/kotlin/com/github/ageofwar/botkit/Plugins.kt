@@ -1,6 +1,10 @@
 package com.github.ageofwar.botkit
 
 import com.github.ageofwar.botkit.plugin.Plugin
+import com.github.ageofwar.botkit.plugin.readException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 
 typealias Plugins = MutableMap<String, Plugin>
 
@@ -58,19 +62,23 @@ suspend fun Plugin.close(context: Context): Boolean {
     }
 }
 
-fun Plugin.registerCommands(fileName: String = "commands.txt") {
-    val commandsFile = dataFolder.resolve(fileName)
-    if (commandsFile.exists()) {
-        val commands = commandsFile.readLines().mapNotNull {
-            val line = it.trim()
-            if (line.isNotEmpty()) {
-                val parts = it.split(Regex("\\s*-\\s*"), limit = 2)
-                check(parts.size == 2) { "Invalid file format for '$fileName', missing - separator" }
-                val (name, description) = parts
-                check(name.all { c -> c.isJavaIdentifierPart() }) { "Invalid file format for '$fileName', invalid command name '$name'" }
-                name to description
-            } else null
+suspend fun Plugin.registerCommands(fileName: String = "commands.txt") = withContext(Dispatchers.IO) {
+    try {
+        val commandsFile = dataFolder.resolve(fileName)
+        if (commandsFile.exists()) {
+            val commands = commandsFile.readLines().mapNotNull {
+                val line = it.trim()
+                if (line.isNotEmpty()) {
+                    val parts = it.split(Regex("\\s*-\\s*"), limit = 2)
+                    if (parts.size != 2) throw SerializationException("Invalid file format for '$fileName', missing - separator")
+                    val (name, description) = parts
+                    if (!name.all { c -> c.isJavaIdentifierPart() }) throw SerializationException("Invalid file format for '$fileName', invalid command name '$name'")
+                    name to description
+                } else null
+            }
+            commands.forEach { (name, description) -> registerCommand(name, description) }
         }
-        commands.forEach { (name, description) -> registerCommand(name, description) }
+    } catch (e: Throwable) {
+        readException(fileName, e)
     }
 }
