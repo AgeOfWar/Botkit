@@ -1,5 +1,6 @@
 {
   "log_format": "[${date?number_to_datetime?string[\"yyyy-MM-dd HH:mm:ss\"]}][${category}][${level}] ${message}",
+  "verbose_errors": false,
   "loggers": [
     {
       "type": "console"
@@ -16,7 +17,7 @@
     "bot_stop": "Stopping ${event.bot.username}",
     "old_update": null,
     "new_update": null,
-    "plugin_load_error": "An error occurred while loading plugin '${event.plugin}': $message",
+    "plugin_load_error": "An error occurred while loading plugin '${event.plugin}'",
     "plugin_init_error": "An error occurred while initializing plugin '${event.plugin}'",
     "plugin_update_error": "An error occurred while handling an update ${event.update}",
     "plugin_close_error": "An error occurred while disabling plugin '${event.plugin}'",

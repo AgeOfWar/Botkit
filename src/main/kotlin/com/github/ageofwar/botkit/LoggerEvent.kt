@@ -1,5 +1,6 @@
 package com.github.ageofwar.botkit
 
+import com.github.ageofwar.botkit.files.PluginLoadException
 import com.github.ageofwar.ktelegram.DetailedBot
 import com.github.ageofwar.ktelegram.Update
 
@@ -34,7 +35,7 @@ data class NewUpdate(val update: Update) : LoggerEvent {
     override val level = "INFO"
 }
 
-data class PluginLoadError(val plugin: String, val message: String) : LoggerEvent {
+data class PluginLoadError(val plugin: String, override val throwable: PluginLoadException) : LoggerEvent {
     override fun message(format: Strings) = format.pluginLoadError
     override val category = "Botkit"
     override val level = "ERROR"

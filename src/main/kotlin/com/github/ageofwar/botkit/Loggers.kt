@@ -11,6 +11,7 @@ import java.lang.System.currentTimeMillis
 @Serializable
 data class SerializableLoggers(
     @SerialName("log_format") val logFormat: String,
+    @SerialName("verbose_errors") val verboseErrors: Boolean,
     val loggers: List<Logger>,
     val strings: Strings
 )
@@ -18,11 +19,22 @@ data class SerializableLoggers(
 class Loggers(
     private val logFormat: String,
     private val loggers: List<Logger>,
+    private val verboseErrors: Boolean,
     val strings: Strings
 ) {
     suspend fun log(event: LoggerEvent) {
-        log(event.message(strings)?.template("event" to event), event.category, event.level)
-        log(event.throwable?.stackTraceToString(), event.category, event.level)
+        if (verboseErrors) {
+            log(event.message(strings)?.template("event" to event), event.category, event.level)
+            log(event.throwable?.stackTraceToString(), event.category, event.level)
+        } else {
+            val message = event.message(strings)?.template("event" to event)
+            val error = event.throwable?.message
+            when {
+                message != null && error != null -> log("$message: $error", event.category, event.level)
+                message != null -> log(message, event.category, event.level)
+                error != null -> log(event.throwable!!.javaClass.simpleName + ": $error", event.category, event.level)
+            }
+        }
     }
     
     suspend fun log(message: String, category: String, level: String) = supervisorScope {

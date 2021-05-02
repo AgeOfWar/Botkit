@@ -29,13 +29,13 @@ suspend fun Context.getAvailablePlugins() = pluginsDirectory.findPluginsNames()
 suspend fun Context.enablePlugin(name: String): Plugin? {
     val file = pluginsDirectory.search(name)
     if (file == null) {
-        log(PluginLoadError(name, "Plugin not found"))
+        log(PluginLoadError(name, PluginLoadException("Plugin not found")))
         return null
     }
     val plugin = try {
         loadPlugin(file, this)
     } catch (e: PluginLoadException) {
-        log(PluginLoadError(name, e.message))
+        log(PluginLoadError(name, e))
         return null
     }
     if (plugin.name in plugins) {
@@ -79,7 +79,7 @@ suspend fun Context.reloadPlugin(name: String): Plugin? {
     val reloadedPlugin = try {
         loadPlugin(plugin.file, this)
     } catch (e: PluginLoadException) {
-        log(PluginLoadError(plugin.name, e.message))
+        log(PluginLoadError(plugin.name, e))
         return null
     }
     if (plugin.name in plugins) {

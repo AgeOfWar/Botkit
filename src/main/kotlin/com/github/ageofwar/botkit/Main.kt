@@ -32,8 +32,8 @@ fun main(vararg args: String) = runBlocking {
     val consoleCommandChannel = Channel<String>()
     val context = Context(api, logger, this, plugins, pluginsDirectory, commands, consoleCommandChannel)
     context.addDefaultConsoleCommands()
-    plugins.loadPlugins(context)
     logger.use {
+        plugins.loadPlugins(context)
         plugins.init(logger)
         context.reloadCommands()
         logger.log(BotStart(bot))
@@ -47,12 +47,12 @@ fun main(vararg args: String) = runBlocking {
 }
 
 private suspend fun Plugins.loadPlugins(context: Context) {
-    print("Loading plugins... ")
+    context.logger.log("Loading plugins...", "Botkit", "INFO")
     loadPlugins(File("plugins"), context)
     when (size) {
-        0 -> println("No plugin found")
-        1 -> println("1 plugin found (${keys.single()})")
-        else -> println("$size plugins found (${keys.joinToString(", ") { "'$it'" }})")
+        0 -> context.logger.log("No plugin loaded", "Botkit", "INFO")
+        1 -> context.logger.log("1 plugin loaded (${keys.single()})", "Botkit", "INFO")
+        else -> context.logger.log("$size plugins loaded [${keys.joinToString(", ")}]", "Botkit", "INFO")
     }
 }
 
@@ -67,7 +67,7 @@ private suspend fun loadLogger(plugins: Plugins, json: Json): Loggers {
     }
     val loggers = logger.loggers + PluginsLogger(plugins)
     println("Done")
-    return Loggers(logger.logFormat, loggers, logger.strings)
+    return Loggers(logger.logFormat, loggers, logger.verboseErrors, logger.strings)
 }
 
 private suspend fun loadBotConfig(overrideToken: String?, json: Json): BotConfig {
