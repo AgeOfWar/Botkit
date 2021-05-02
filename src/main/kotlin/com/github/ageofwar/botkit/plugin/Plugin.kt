@@ -136,9 +136,9 @@ suspend fun Plugin.registerCommandHandler(
     serializer: KSerializer<MessageContent<*>> = MessageContent.MarkdownSerializer
 ) = withContext(Dispatchers.IO) {
     try {
-        val startFile = dataFolder.resolve(fileName)
-        if (startFile.exists()) {
-            val contents = json.decodeFromString(ListSerializer(serializer), startFile.readText())
+        val commandFile = dataFolder.resolve(fileName)
+        if (commandFile.exists()) {
+            val contents = json.decodeFromString(ListSerializer(serializer), commandFile.readText())
             registerUpdateHandler(UpdateHandler { update ->
                 update.handleCommand(api, *commandName, ignoreCase = ignoreCase) { message, _, _ ->
                     contents.forEach {
