@@ -120,4 +120,4 @@ registerCommandHandler("start", "help", fileName = "start.json" /* optional */)
 
 `Plugin.readFileOrCopy<reified T>(file: String, defaultPath: String, ...): T`
 
-Reads a json file and if it is not present copies the file from resources (config/defaultPath)
+Reads a json file and if it is not present copies the file from resources at `config/defaultPath`
