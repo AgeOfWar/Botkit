@@ -96,7 +96,7 @@ Adding this file into plugin data folder will update your bot commands when the 
 ## Other utility functions
 `Plugin.registerCommandHandler(vararg commandName: String, ...)`
 
-Registers a simple command that sends a list of messages saved in a file
+Registers a simple command that sends a list of messages saved in a file.
 
 ```kotlin
 registerCommandHandler("start", "help", fileName = "start.json" /* optional */)
@@ -120,4 +120,4 @@ registerCommandHandler("start", "help", fileName = "start.json" /* optional */)
 
 `Plugin.readFileOrCopy<reified T>(file: String, defaultPath: String, ...): T`
 
-Reads a json file and if it is not present copies the file from resources at `config/defaultPath`
+Reads a json file and if it is not present copies the file from resources at `config/defaultPath`.
