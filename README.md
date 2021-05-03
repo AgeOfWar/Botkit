@@ -27,7 +27,7 @@ where options include:
 ```text
 disable <plugin|*>  - disables plugin or all plugins
 enable <plugin|*>   - enables plugin or all plugins
-reload [reload|*]   - reloads plugin or all plugins
+reload [plugin|*]   - reloads plugin or all plugins
 plugins             - shows enabled and available plugins
 stop                - stops botkit
 ```
@@ -91,7 +91,7 @@ Adding this file into plugin data folder will update your bot commands when the 
 ## Other utility functions
 `Plugin.registerCommandHandler(vararg commandName: String, ...)`
 
-Registers a simple command that simply sends a message saved in a file
+Registers a simple command that sends a list of messages saved in a file
 
 ```kotlin
 registerCommandHandler("start", "help", fileName = "start.json" /* optional */)
