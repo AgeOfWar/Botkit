@@ -65,6 +65,11 @@ pluginClassName=com.example.myplugin.MyPlugin
 apiVersion=0.1
 ```
 
+| Botkit version | apiVersion |
+|----------------|------------|
+| 0.6            | 0.1        |
+| 0.5 - 0.1      | N/A        |
+
 ## Some utility functions
 
 | Function                                                                           | Description                                                                           |
