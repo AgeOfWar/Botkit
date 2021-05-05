@@ -23,13 +23,13 @@ suspend fun longPollingBot(
 ) = coroutineScope {
     val (backOff) = config
     val exceptionHandlers = arrayOf<ExceptionHandler>(ErrorLogger(logger))
-    val oldUpdates = getPreviousUpdates(api, exceptionHandlers)
+    val oldUpdates = getPreviousUpdates(api, exceptionHandlers = exceptionHandlers)
     oldUpdates.handle(
         OldUpdateLogger(logger),
         OldUpdatePluginsHandler(logger, plugins),
         exceptionHandlers = exceptionHandlers
     )
-    val newUpdates = getUpdates(api, null, { backOff }, exceptionHandlers)
+    val newUpdates = getUpdates(api, null, { backOff }, exceptionHandlers = exceptionHandlers)
     newUpdates.handle(
         NewUpdateLogger(logger),
         NewUpdatePluginsHandler(logger, plugins),
