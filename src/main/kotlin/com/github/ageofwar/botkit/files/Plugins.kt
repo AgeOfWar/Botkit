@@ -12,7 +12,7 @@ import java.io.InputStream
 import java.net.URLClassLoader
 import java.util.*
 
-val SUPPORTED_API_VERSIONS = arrayOf("0.1")
+val SUPPORTED_API_VERSIONS = arrayOf("0.2")
 
 suspend fun Plugins.loadPlugins(directory: File, context: Context) = withContext(Dispatchers.IO) {
     directory.mkdirs()
