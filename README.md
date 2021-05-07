@@ -96,30 +96,6 @@ hello - says hello
 Adding this file into plugin data folder will update your bot commands when the plugin is enabled
 
 ## Other utility functions
-`Plugin.registerCommandHandler(vararg commandName: String, ...)`
-
-Registers a simple command that sends a list of messages saved in a file.
-
-```kotlin
-registerCommandHandler("start", "help", fileName = "start.json" /* optional */)
-```
-
-### start.json
-```json
-[
-  {
-    "text": "*This* bot is very cool and uses [Botkit](https://github.com/AgeOfWar/Botkit)",
-    "disable_web_page_preview": true
-  },
-  {
-    "photo": "https://my.cool/image.png",
-    "caption": "👍"
-  }
-]
-```
-
-------------
-
 `Plugin.readFileOrCopy<reified T>(file: String, defaultPath: String, ...): T`
 
 Reads a json file and if it is not present copies the file from resources at `config/defaultPath`.
