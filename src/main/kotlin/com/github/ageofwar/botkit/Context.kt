@@ -1,9 +1,6 @@
 package com.github.ageofwar.botkit
 
-import com.github.ageofwar.botkit.files.PluginLoadException
-import com.github.ageofwar.botkit.files.findPluginsNames
-import com.github.ageofwar.botkit.files.loadPlugin
-import com.github.ageofwar.botkit.files.search
+import com.github.ageofwar.botkit.files.*
 import com.github.ageofwar.botkit.plugin.Plugin
 import com.github.ageofwar.ktelegram.BotCommand
 import com.github.ageofwar.ktelegram.TelegramApi
@@ -24,18 +21,22 @@ data class Context(
     val consoleCommandChannel: Channel<String>
 )
 
-suspend fun Context.getAvailablePlugins() = pluginsDirectory.findPluginsNames()
+suspend fun Context.getAvailablePluginsNames() = pluginsDirectory.availablePluginsNames()
+suspend fun Context.getAvailablePlugins() = pluginsDirectory.availablePlugins()
+fun Context.searchPlugin(name: String) = plugins.search(name)
+fun Context.searchPluginName(name: String) = plugins.searchName(name)
+suspend fun Context.searchAvailablePlugin(name: String) = pluginsDirectory.searchAvailablePlugin(name)
 
-suspend fun Context.enablePlugin(name: String): Plugin? {
-    val file = pluginsDirectory.search(name)
-    if (file == null) {
-        log(PluginLoadError(name, PluginLoadException("Plugin not found")))
+suspend fun Context.enablePlugin(file: File): Plugin? {
+    val fileName = file.nameWithoutExtension
+    if (!file.isFile) {
+        log(PluginLoadError(fileName, PluginLoadException("'$fileName' is not a valid plugin")))
         return null
     }
     val plugin = try {
         loadPlugin(file, this)
     } catch (e: PluginLoadException) {
-        log(PluginLoadError(name, e))
+        log(PluginLoadError(fileName, e))
         return null
     }
     if (plugin.name in plugins) {
@@ -49,12 +50,12 @@ suspend fun Context.enablePlugin(name: String): Plugin? {
     return null
 }
 
-suspend fun Context.enablePlugins(vararg names: String): List<Plugin> {
-    return names.mapNotNull { enablePlugin(it) }
+suspend fun Context.enablePlugins(files: Iterable<File>): List<Plugin> {
+    return files.mapNotNull { enablePlugin(it) }
 }
 
 suspend fun Context.disablePlugin(name: String): Plugin? {
-    val plugin = plugins.search(name)
+    val plugin = plugins[name]
     if (plugin == null) {
         log(PluginNotEnabled(name))
         return null
@@ -64,40 +65,21 @@ suspend fun Context.disablePlugin(name: String): Plugin? {
     return plugin
 }
 
-suspend fun Context.disablePlugins(vararg names: String): List<Plugin> {
+suspend fun Context.disablePlugins(names: Iterable<String>): List<Plugin> {
     return names.mapNotNull { disablePlugin(it) }
 }
 
 suspend fun Context.reloadPlugin(name: String): Plugin? {
-    val plugin = plugins.search(name)
-    if (plugin == null) {
-        log(PluginNotEnabled(name))
-        return null
-    }
-    plugins -= plugin.name
-    plugin.close(this)
-    val reloadedPlugin = try {
-        loadPlugin(plugin.file, this)
-    } catch (e: PluginLoadException) {
-        log(PluginLoadError(plugin.name, e))
-        return null
-    }
-    if (plugin.name in plugins) {
-        log(PluginAlreadyEnabled(plugin.name))
-        return null
-    }
-    if (plugin.init(this)) {
-        plugins[plugin.name] = plugin
-        return reloadedPlugin
-    }
-    return null
+    val plugin = disablePlugin(name) ?: return null
+    return enablePlugin(plugin.file)
 }
 
-suspend fun Context.reloadPlugins(vararg names: String): List<Plugin> {
+suspend fun Context.reloadPlugins(names: Iterable<String>): List<Plugin> {
     return names.mapNotNull { reloadPlugin(it) }
 }
 
 fun Context.addDefaultConsoleCommands() = commands.putAll(arrayOf(
+    "help" to HelpCommand(this),
     "stop" to StopCommand(this),
     "enable" to EnablePluginCommand(this),
     "disable" to DisablePluginCommand(this),

@@ -1,5 +1,6 @@
 package com.github.ageofwar.botkit
 
+import com.github.ageofwar.botkit.plugin.template
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ClosedSendChannelException
@@ -10,22 +11,23 @@ typealias ConsoleCommands = MutableMap<String, ConsoleCommand>
 
 interface ConsoleCommand {
     suspend fun handle(name: String, args: String)
+    fun usage(format: Strings): String?
 }
 
-suspend fun listenCommands(context: Context, unknownCommand: ConsoleCommand = OtherPluginsCommand(context)) {
-    for (input in context.consoleCommandChannel) {
+suspend fun Context.listenCommands(unknownCommand: ConsoleCommand = OtherPluginsCommand(this)) {
+    for (input in consoleCommandChannel) {
         try {
-            handleCommand(input, context, unknownCommand)
+            handleCommand(input, unknownCommand)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
-            context.log(CommandError(input, e))
+            log(CommandError(input, e))
         }
     }
 }
 
-suspend fun sendCommands(context: Context) {
-    while (!context.consoleCommandChannel.isClosedForSend) {
+suspend fun Context.sendCommands() {
+    while (!consoleCommandChannel.isClosedForSend) {
         val input = withContext(Dispatchers.IO) {
             if (System.`in`.available() != 0) {
                 readLine()
@@ -38,199 +40,163 @@ suspend fun sendCommands(context: Context) {
             continue
         }
         try {
-            context.consoleCommandChannel.send(input)
+            consoleCommandChannel.send(input)
         } catch (e: ClosedSendChannelException) {
             break
         }
     }
 }
 
-private suspend fun handleCommand(input: String, context: Context, unknownCommand: ConsoleCommand = UnknownCommand(context.logger)) {
+private suspend fun Context.handleCommand(input: String, unknownCommand: ConsoleCommand) {
     val parts = input.trim().split(Regex("\\s+"), limit = 2)
     if (parts[0].isEmpty()) return
-    context.log(CommandReceived(input))
+    log(CommandReceived(input))
     val name = parts[0]
     val args = if (parts.size > 1) parts[1] else ""
-    val command = context.commands[name] ?: unknownCommand
+    val command = commands[name] ?: unknownCommand
     try {
         command.handle(name, args)
     } catch (e: Throwable) {
-        context.log(CommandError(input, e))
+        log(CommandError(input, e))
     }
 }
 
 class UnknownCommand(private val logger: Loggers) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) {
-        logger.log(UnknownCommand(name, args))
+        logger.log(UnknownCommandName(name, args))
     }
     
-    data class UnknownCommand(val name: String, val args: String) : LoggerEvent {
-        override fun message(format: Strings) = format.commands.unknown.message
-        override val category = "Botkit"
-        override val level = "INFO"
-    }
+    override fun usage(format: Strings): Nothing? = null
 }
 
 class StopCommand(private val context: Context) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) {
         context.consoleCommandChannel.close()
-        context.log(StopCommand)
     }
     
-    object StopCommand : LoggerEvent {
-        override fun message(format: Strings) = format.commands.stop.message
-        override val category = "Botkit"
-        override val level = "INFO"
-    }
+    override fun usage(format: Strings) = format.commands.stop
 }
 
 class EnablePluginCommand(private val context: Context) : ConsoleCommand {
-    override suspend fun handle(name: String, args: String) {
-        if (args.isEmpty()) {
-            return context.log(Usage(name))
-        }
-        if (args == "*") {
-            return handle(name)
-        }
-        val pluginName = args.removeSuffix(".jar")
-        val plugin = context.enablePlugin(pluginName)
+    override suspend fun handle(name: String, args: String) = with(context) {
+        if (args.isEmpty()) return log(Usage(usage(logger.strings)))
+        if (args == "*") return handle(name)
+        val pluginFile = searchAvailablePlugin(args) ?: return log(PluginNotAvailable(args))
+        val plugin = enablePlugin(pluginFile)
         if (plugin != null) {
-            context.log(PluginEnabled(plugin.name))
-            context.reloadCommands()
+            log(PluginEnabled(plugin.name))
+            reloadCommands()
         }
     }
     
-    private suspend fun handle(name: String) {
-        val enabled = context.enablePlugins(*context.getAvailablePlugins().toList().toTypedArray())
-        context.log(PluginsEnabled(enabled.map { it.name }))
-        context.reloadCommands()
+    private suspend fun handle(name: String): Unit = with(context) {
+        val enabled = enablePlugins(getAvailablePlugins())
+        log(PluginsEnabled(enabled.map { it.name }))
+        reloadCommands()
     }
     
-    data class Usage(val name: String) : LoggerEvent {
-        override fun message(format: Strings) = format.commands.enable.usage
-        override val category = "Botkit"
-        override val level = "INFO"
-    }
-    
-    data class PluginEnabled(val plugin: String) : LoggerEvent {
-        override fun message(format: Strings) = format.commands.enable.pluginEnabled
-        override val category = "Botkit"
-        override val level = "INFO"
-    }
-    
-    data class PluginsEnabled(val plugins: Iterable<String>) : LoggerEvent {
-        override fun message(format: Strings) = format.commands.enable.pluginsEnabled
-        override val category = "Botkit"
-        override val level = "INFO"
-    }
+    override fun usage(format: Strings) = format.commands.enable
 }
 
 class DisablePluginCommand(private val context: Context) : ConsoleCommand {
-    override suspend fun handle(name: String, args: String) {
-        if (args.isEmpty()) {
-            return context.log(Usage(name))
-        }
-        if (args == "*") {
-            return handle(name)
-        }
-        val plugin = context.disablePlugin(args)
+    override suspend fun handle(name: String, args: String) = with(context) {
+        if (args.isEmpty()) return log(Usage(usage(logger.strings)))
+        if (args == "*") return handle(name)
+        val pluginName = searchPluginName(args) ?: return log(PluginNotEnabled(args))
+        val plugin = disablePlugin(pluginName)
         if (plugin != null) {
-            context.log(PluginDisabled(plugin.name))
-            context.reloadCommands()
+            log(PluginDisabled(plugin.name))
+            reloadCommands()
         }
     }
     
-    private suspend fun handle(name: String) {
-        val disabled = context.disablePlugins(*context.plugins.keys.toTypedArray())
-        context.log(PluginsDisabled(disabled.map { it.name }))
-        context.reloadCommands()
+    private suspend fun handle(name: String): Unit = with(context) {
+        val disabled = context.disablePlugins(plugins.keys)
+        log(PluginsDisabled(disabled.map { it.name }))
+        reloadCommands()
     }
     
-    data class Usage(val name: String) : LoggerEvent {
-        override fun message(format: Strings) = format.commands.disable.usage
-        override val category = "Botkit"
-        override val level = "INFO"
-    }
-    
-    data class PluginDisabled(val plugin: String) : LoggerEvent {
-        override fun message(format: Strings) = format.commands.disable.pluginDisabled
-        override val category = "Botkit"
-        override val level = "INFO"
-    }
-    
-    data class PluginsDisabled(val plugins: Iterable<String>) : LoggerEvent {
-        override fun message(format: Strings) = format.commands.disable.pluginsDisabled
-        override val category = "Botkit"
-        override val level = "INFO"
-    }
+    override fun usage(format: Strings) = format.commands.disable
 }
 
 class PluginsCommand(private val context: Context) : ConsoleCommand {
-    override suspend fun handle(name: String, args: String) {
-        context.log(Plugins(context.plugins.keys, context.getAvailablePlugins().toList()))
+    override suspend fun handle(name: String, args: String) = with(context) {
+        log(ShowPlugins(plugins.keys, getAvailablePluginsNames()))
     }
     
-    data class Plugins(val enabled: Iterable<String>, val available: Iterable<String>) : LoggerEvent {
-        override fun message(format: Strings) = format.commands.plugins.message
-        override val category = "Botkit"
-        override val level = "INFO"
-    }
+    override fun usage(format: Strings) = format.commands.plugins
 }
 
 class ReloadPluginsCommand(private val context: Context) : ConsoleCommand {
-    override suspend fun handle(name: String, args: String) {
+    override suspend fun handle(name: String, args: String): Unit = with(context) {
         if (args.isEmpty() || args == "*") {
             handle(name)
         } else {
-            val plugin = context.reloadPlugin(args)
+            val pluginName = searchPluginName(args) ?: return log(PluginNotEnabled(args))
+            val plugin = reloadPlugin(pluginName)
             if (plugin != null) {
-                context.log(PluginReloaded(plugin.name))
+                log(PluginReloaded(plugin.name))
             }
         }
-        context.reloadCommands()
+        reloadCommands()
     }
     
-    private suspend fun handle(name: String) {
-        val reloadedPlugins = context.reloadPlugins(*context.plugins.keys.toTypedArray())
-        context.log(PluginsReloaded(reloadedPlugins.map { it.name }))
+    private suspend fun handle(name: String): Unit = with(context) {
+        val reloadedPlugins = reloadPlugins(plugins.keys)
+        log(PluginsReloaded(reloadedPlugins.map { it.name }))
     }
     
-    data class PluginReloaded(val plugin: String) : LoggerEvent {
-        override fun message(format: Strings) = format.commands.reload.pluginReloaded
-        override val category = "Botkit"
-        override val level = "INFO"
-    }
-    
-    data class PluginsReloaded(val plugins: Iterable<String>) : LoggerEvent {
-        override fun message(format: Strings) = format.commands.reload.pluginsReloaded
-        override val category = "Botkit"
-        override val level = "INFO"
-    }
+    override fun usage(format: Strings) = format.commands.reload
 }
 
 class OtherPluginsCommand(
     private val context: Context,
     private val unknownCommand: ConsoleCommand = UnknownCommand(context.logger)
 ) : ConsoleCommand {
-    override suspend fun handle(name: String, args: String) {
+    override suspend fun handle(name: String, args: String): Unit = with(context) {
         val nameParts = name.split('/', limit = 2)
         if (nameParts.size == 1) {
-            val plugins = context.plugins.values.filter { it.consoleCommands.containsKey(name) }
+            val plugins = plugins.values.filter { it.consoleCommands.containsKey(name) }
             when (plugins.size) {
                 0 -> unknownCommand.handle(name, args)
                 1 -> plugins[0].consoleCommands[name]?.handle(name, args)
-                else -> context.log(Conflict(name, plugins.map { it.name }))
+                else -> log(Conflict(name, plugins.map { it.name }))
             }
         } else {
             val (pluginName, commandName) = nameParts
-            val plugin = context.plugins[pluginName] ?: return context.log(PluginNotEnabled(pluginName))
+            if (pluginName == "Botkit") return commands[commandName]?.handle(name, args) ?: unknownCommand.handle(name, args)
+            val plugin = plugins[pluginName] ?: return log(PluginNotEnabled(pluginName))
             plugin.consoleCommands[commandName]?.handle(name, args) ?: unknownCommand.handle(name, args)
         }
     }
     
-    data class Conflict(val name: String, val plugins: Iterable<String>) : LoggerEvent {
-        override fun message(format: Strings) = format.commands.conflict
-        override val category = "Botkit"
-        override val level = "WARNING"
+    override fun usage(format: Strings): Nothing? = null
+}
+
+class HelpCommand(
+    private val context: Context
+) : ConsoleCommand {
+    @OptIn(ExperimentalStdlibApi::class)
+    override suspend fun handle(name: String, args: String) = with(context) {
+        if (args.isEmpty()) {
+            val commands = buildMap<String, Map<String, String?>> {
+                put("Botkit", commands.mapValues { (name, command) -> command.usage(logger.strings)?.template("name" to name) })
+                plugins.forEach { (name, plugin) ->
+                    put(name, plugin.consoleCommands.mapValues { (name, command) -> command.usage?.template("name" to name) })
+                }
+            }
+            return log(ShowCommands(commands))
+        }
+        val commands = buildMap<String, String?> {
+            val botkitCommand = commands[args]
+            if (botkitCommand != null) put("Botkit", botkitCommand.usage(logger.strings)?.template("name" to args))
+            plugins.forEach { (name, plugin) ->
+                val pluginCommand = plugin.consoleCommands[args]
+                if (pluginCommand != null) put(name, pluginCommand.usage?.template("name" to args))
+            }
+        }
+        log(ShowCommand(args, commands))
     }
+    
+    override fun usage(format: Strings) = format.commands.help
 }

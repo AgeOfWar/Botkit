@@ -66,6 +66,7 @@ interface PluginLogger {
 
 interface PluginCommand {
     suspend fun handle(name: String, args: String)
+    val usage: String? get() = null
 }
 
 class PluginException(val plugin: Plugin, message: String? = null, cause: Throwable? = null) : RuntimeException(message, cause)

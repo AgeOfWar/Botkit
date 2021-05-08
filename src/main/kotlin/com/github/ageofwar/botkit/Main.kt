@@ -30,30 +30,27 @@ fun main(vararg args: String) = runBlocking {
     val pluginsDirectory = File("plugins")
     val commands = ConcurrentHashMap<String, ConsoleCommand>()
     val consoleCommandChannel = Channel<String>()
-    val context = Context(api, logger, this, plugins, pluginsDirectory, commands, consoleCommandChannel)
-    context.addDefaultConsoleCommands()
-    logger.use {
-        plugins.loadPlugins(context)
-        plugins.init(logger)
-        context.reloadCommands()
-        logger.log(BotStart(bot))
-        val job = launch { botkit(api, logger, botkit, plugins) }
-        launch { sendCommands(context) }
-        listenCommands(context)
-        logger.log(BotStop(bot))
-        job.cancelAndJoin()
-        plugins.close(logger)
+    with(Context(api, logger, this, plugins, pluginsDirectory, commands, consoleCommandChannel)) {
+        addDefaultConsoleCommands()
+        logger.use {
+            loadPlugins()
+            plugins.init(logger)
+            reloadCommands()
+            log(BotStart(bot))
+            val job = launch { botkit(api, logger, botkit, plugins) }
+            launch { sendCommands() }
+            listenCommands()
+            log(BotStop(bot))
+            job.cancelAndJoin()
+            plugins.close(logger)
+        }
     }
 }
 
-private suspend fun Plugins.loadPlugins(context: Context) {
-    context.logger.log("Loading plugins...", "Botkit", "INFO")
-    loadPlugins(File("plugins"), context)
-    when (size) {
-        0 -> context.logger.log("No plugin loaded", "Botkit", "INFO")
-        1 -> context.logger.log("1 plugin loaded (${keys.single()})", "Botkit", "INFO")
-        else -> context.logger.log("$size plugins loaded [${keys.joinToString(", ")}]", "Botkit", "INFO")
-    }
+private suspend fun Context.loadPlugins() {
+    println("Loading plugins...")
+    plugins.loadPlugins(File("plugins"), this)
+    log(PluginsEnabled(plugins.keys))
 }
 
 private suspend fun loadLogger(plugins: Plugins, json: Json): Loggers {

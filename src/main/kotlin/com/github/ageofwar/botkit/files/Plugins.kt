@@ -12,7 +12,7 @@ import java.io.InputStream
 import java.net.URLClassLoader
 import java.util.*
 
-val SUPPORTED_API_VERSIONS = arrayOf("0.2")
+val SUPPORTED_API_VERSIONS = arrayOf("0.3")
 
 suspend fun Plugins.loadPlugins(directory: File, context: Context) = withContext(Dispatchers.IO) {
     directory.mkdirs()
@@ -44,18 +44,14 @@ suspend fun loadPlugin(file: File, context: Context): Plugin = withContext(Dispa
     }
 }
 
-suspend fun File.findPluginsNames(): Sequence<String> = withContext(Dispatchers.IO) {
-    sequence {
-        listFiles()?.forEach {
-            if (it.isFile && it.extension == "jar") {
-                yield(it.nameWithoutExtension)
-            }
-        }
-    }
+suspend fun File.availablePlugins(): List<File> = withContext(Dispatchers.IO) {
+    listFiles()?.filter { it.isFile && it.extension == "jar" } ?: emptyList()
 }
 
-suspend fun File.search(name: String): File? {
-    val plugin = findPluginsNames().firstOrNull { it.startsWith(name, ignoreCase = true) }
+suspend fun File.availablePluginsNames(): List<String> = availablePlugins().map { it.name }
+
+suspend fun File.searchAvailablePlugin(name: String): File? {
+    val plugin = availablePluginsNames().firstOrNull { it.startsWith(name.removeSuffix(".jar"), ignoreCase = true) }
     return if (plugin == null) null else resolve("$plugin.jar")
 }
 

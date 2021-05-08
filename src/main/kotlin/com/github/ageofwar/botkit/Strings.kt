@@ -15,54 +15,31 @@ data class Strings(
     @SerialName("plugin_close_error") val pluginCloseError: String?,
     @SerialName("plugin_already_enabled") val pluginAlreadyEnabled: String?,
     @SerialName("plugin_not_enabled") val pluginNotEnabled: String?,
+    @SerialName("plugin_not_available") val pluginNotAvailable: String?,
     @SerialName("command_received") val commandReceived: String?,
     @SerialName("command_error") val commandError: String?,
     @SerialName("commands_reload_error") val commandsReloadError: String?,
+    @SerialName("plugin_enabled") val pluginEnabled: String?,
+    @SerialName("plugins_enabled") val pluginsEnabled: String?,
+    @SerialName("plugin_disabled") val pluginDisabled: String?,
+    @SerialName("plugins_disabled") val pluginsDisabled: String?,
+    @SerialName("plugin_reloaded") val pluginReloaded: String?,
+    @SerialName("plugins_reloaded") val pluginsReloaded: String?,
+    @SerialName("unknown_command") val unknownCommand: String?,
+    @SerialName("show_plugins") val showPlugins: String?,
+    @SerialName("command_conflict") val commandConflict: String?,
+    @SerialName("show_command") val showCommand: String?,
+    @SerialName("show_commands") val showCommands: String?,
+    @SerialName("show_usage") val showUsage: String?,
     val commands: Commands
 ) {
     @Serializable
     data class Commands(
-        val unknown: Unknown,
-        val stop: Stop,
-        val enable: Enable,
-        val disable: Disable,
-        val plugins: Plugins,
-        val reload: Reload,
-        val conflict: String?
-    ) {
-        @Serializable
-        data class Unknown(
-            val message: String?
-        )
-        
-        @Serializable
-        data class Stop(
-            val message: String?
-        )
-        
-        @Serializable
-        data class Enable(
-            val usage: String?,
-            @SerialName("plugin_enabled") val pluginEnabled: String?,
-            @SerialName("plugins_enabled") val pluginsEnabled: String?
-        )
-        
-        @Serializable
-        data class Disable(
-            val usage: String?,
-            @SerialName("plugin_disabled") val pluginDisabled: String?,
-            @SerialName("plugins_disabled") val pluginsDisabled: String?
-        )
-        
-        @Serializable
-        data class Plugins(
-            val message: String?
-        )
-        
-        @Serializable
-        data class Reload(
-            @SerialName("plugin_reloaded") val pluginReloaded: String?,
-            @SerialName("plugins_reloaded") val pluginsReloaded: String?
-        )
-    }
+        val stop: String?,
+        val enable: String?,
+        val disable: String?,
+        val plugins: String?,
+        val reload: String?,
+        val help: String?
+    )
 }

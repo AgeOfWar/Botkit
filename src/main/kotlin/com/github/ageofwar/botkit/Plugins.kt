@@ -35,8 +35,12 @@ suspend fun Plugins.close(logger: Loggers) {
 }
 
 fun Plugins.search(name: String): Plugin? {
-    val plugin = keys.firstOrNull { it.startsWith(name, ignoreCase = true) }
+    val plugin = searchName(name)
     return if (plugin == null) null else get(plugin)
+}
+
+fun Plugins.searchName(name: String): String? {
+    return keys.firstOrNull { it.startsWith(name, ignoreCase = true) }
 }
 
 suspend fun Plugin.init(context: Context): Boolean {
