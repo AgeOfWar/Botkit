@@ -10,7 +10,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import java.lang.Thread.currentThread
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.Path
 import kotlin.system.exitProcess
@@ -61,8 +63,11 @@ private suspend fun loadLogger(plugins: Plugins, json: Json): Loggers {
         }
     }
     val loggers = logger.loggers + PluginsLogger(plugins)
+    val strings = currentThread().contextClassLoader.getResourceAsStream("config/strings.json")?.use {
+        json.decodeFromString<Strings>(it.bufferedReader().readText())
+    } ?: error("Cannot access resource 'strings.json'")
     println("Done")
-    return Loggers(logger.logFormat, loggers, logger.verboseErrors, logger.strings)
+    return Loggers(logger.logFormat, loggers, logger.verboseErrors, strings)
 }
 
 private suspend fun loadBotConfig(overrideToken: String?, json: Json): BotConfig {

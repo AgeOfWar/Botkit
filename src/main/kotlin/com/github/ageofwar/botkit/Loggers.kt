@@ -12,8 +12,7 @@ import java.lang.System.currentTimeMillis
 data class SerializableLoggers(
     @SerialName("log_format") val logFormat: String,
     @SerialName("verbose_errors") val verboseErrors: Boolean,
-    val loggers: List<Logger>,
-    val strings: Strings
+    val loggers: List<Logger>
 )
 
 class Loggers(
