@@ -1,6 +1,5 @@
 package com.github.ageofwar.botkit
 
-import com.github.ageofwar.botkit.files.loadPlugins
 import com.github.ageofwar.botkit.files.readFileOrCopy
 import com.github.ageofwar.botkit.plugin.Plugin
 import com.github.ageofwar.ktelegram.TelegramApi
@@ -34,7 +33,6 @@ fun main(vararg args: String) = runBlocking {
         addDefaultConsoleCommands()
         logger.use {
             loadPlugins()
-            plugins.init(logger)
             reloadCommands()
             log(BotStart(bot))
             val job = launch { botkit(api, logger, botkit, plugins) }
@@ -42,14 +40,14 @@ fun main(vararg args: String) = runBlocking {
             listenCommands()
             log(BotStop(bot))
             job.cancelAndJoin()
-            plugins.close(logger)
+            disablePlugins(plugins.keys)
         }
     }
 }
 
 private suspend fun Context.loadPlugins() {
     println("Loading plugins...")
-    loadPlugins(Path("plugins"))
+    enablePlugins(getAvailablePlugins())
     log(PluginsEnabled(plugins.keys))
 }
 
