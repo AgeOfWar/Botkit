@@ -70,7 +70,7 @@ suspend inline fun <R> Plugin.readFileOrCopy(
             try {
                 file.parent?.createDirectories()
                 javaClass.classLoader.getResourceAsStream("config/$defaultPath")?.use {
-                    it.transferTo(file.outputStream())
+                    it.copyTo(file.outputStream())
                 } ?: throw FileNotFoundException("cannot find resource on config/$defaultPath")
             } catch (e: Throwable) {
                 exceptionHandler(e)
