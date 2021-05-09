@@ -47,9 +47,9 @@ abstract class Plugin {
         context.consoleCommandChannel.send(input)
     }
     
-    fun log(message: String?) = context.pluginLog(this, message)
-    fun warning(message: String?) = context.pluginWarning(this, message)
-    fun error(message: String?, throwable: Throwable? = null) = context.pluginError(this, message, throwable)
+    fun log(message: String?) { context.pluginLog(this, message) }
+    fun warning(message: String?) { context.pluginWarning(this, message) }
+    fun error(message: String?, throwable: Throwable? = null) { context.pluginError(this, message, throwable) }
     
     private inline fun <T : Plugin, R> withPlugin(`class`: Class<out T>, block: T.() -> R): R {
         val plugin = context.plugins.values.filterIsInstance(`class`).firstOrNull()
@@ -67,6 +67,11 @@ interface PluginLogger {
 interface PluginCommand {
     suspend fun handle(name: String, args: String)
     val usage: String? get() = null
+    
+    fun Plugin.logUsage(name: String) {
+        val usage = usage ?: return
+        log("Usage: ${usage.template("name" to name)}")
+    }
 }
 
 class PluginException(val plugin: Plugin, message: String? = null, cause: Throwable? = null) : RuntimeException(message, cause)
