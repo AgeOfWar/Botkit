@@ -3,12 +3,17 @@ Botkit is a program, and a framework that helps to create modular [Telegram Bots
 
 # Gradle
 ```groovy
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.5.0'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.5.0'
+}
+
 repositories {
     maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-    implementation 'com.github.AgeOfWar:Botkit:0.8'
+    implementation 'com.github.AgeOfWar:Botkit:0.9'
 }
 ```
 
@@ -30,6 +35,7 @@ enable <plugin|*>   - enables plugin or all plugins
 reload [plugin|*]   - reloads plugin or all plugins
 plugins             - shows enabled and available plugins
 stop                - stops botkit
+help                - shows list of commands
 ```
 Plugins can add custom commands
 
@@ -62,11 +68,12 @@ Remember to add `botkit.properties` file in your resource source set:
 ```properties
 name=MyPlugin
 pluginClassName=com.example.myplugin.MyPlugin
-apiVersion=0.2
+apiVersion=0.3
 ```
 
 | Botkit version | apiVersion | supported apiVersion |
 |----------------|------------|----------------------|
+| 0.9            | 0.3        | 0.3                  |
 | 0.8            | 0.2        | 0.2                  |
 | 0.7            | 0.2        | 0.2                  |
 | 0.6            | 0.1        | 0.1                  |
@@ -82,9 +89,9 @@ apiVersion=0.2
 | `Plugin.dispatchConsoleCommand(String)                                           ` | executes a console command                                                            |
 | `Plugin.log(String?) / Plugin.warning(String?) / Plugin.error(String?,Throwable?)` | logging methods                                                                       |
 | `Plugin.withPlugin<reified T : Plugin>(T.() -> R): R                             ` | uses external plugin                                                                  |
-| `Plugin.readFile<R>(String, Charset, (Throwable) -> R, Reader.() -> R): R        ` | utility method for plugin data reading                                                |
-| `Plugin.writeFile(String, Charset, (Throwable) -> R, Writer.() -> Unit)          ` | utility method for plugin data writing                                                |
-| `Plugin.readFileAs(...) / Plugin.readFileOrCopy(...) / Plugin.writeFile(...)     ` | utility methods for json data reading/writing                                         |
+| `Plugin.readFile(...) / Plugin.readFileOrCopy(...)                               ` | utility method for plugin data reading                                                |
+| `Plugin.writeFile(...)                                                           ` | utility method for plugin data writing                                                |
+| `Plugin.readJsonFileAs(...) / Plugin.writeFile(...)                              ` | utility methods for json data reading/writing                                         |
 | `String.template(vararg Pair<String, Any?>): String                              ` | formats a string, see [Freemarker](https://freemarker.apache.org/docs/index.html)     |
 
 ## commands.txt
@@ -94,8 +101,3 @@ help  - shows an help message
 hello - says hello
 ```
 Adding this file into plugin data folder will update your bot commands when the plugin is enabled
-
-## Other utility functions
-`Plugin.readFileOrCopy<reified T>(file: String, defaultPath: String, ...): T`
-
-Reads a json file and if it is not present copies the file from resources at `config/defaultPath`.
