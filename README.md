@@ -13,7 +13,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.AgeOfWar:Botkit:0.9'
+    implementation 'com.github.AgeOfWar:Botkit:0.10'
 }
 ```
 
@@ -73,6 +73,7 @@ apiVersion=0.3
 
 | Botkit version | apiVersion | supported apiVersion |
 |----------------|------------|----------------------|
+| 0.10           | 0.3        | 0.3                  |
 | 0.9            | 0.3        | 0.3                  |
 | 0.8            | 0.2        | 0.2                  |
 | 0.7            | 0.2        | 0.2                  |
