@@ -2,34 +2,36 @@ package com.github.ageofwar.botkit.files
 
 import com.github.ageofwar.botkit.Context
 import com.github.ageofwar.botkit.PluginLoadError
-import com.github.ageofwar.botkit.Plugins
 import com.github.ageofwar.botkit.log
 import com.github.ageofwar.botkit.plugin.Plugin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.File
 import java.io.InputStream
 import java.net.URLClassLoader
+import java.nio.file.Path
 import java.util.*
+import kotlin.io.path.*
 
 val SUPPORTED_API_VERSIONS = arrayOf("0.3")
 
-suspend fun Plugins.loadPlugins(directory: File, context: Context) = withContext(Dispatchers.IO) {
-    directory.mkdirs()
-    val files = directory.listFiles() ?: error("$directory is not a directory!")
-    files.filter { it.isFile && it.extension == "jar" }.forEach {
-        try {
-            val plugin = loadPlugin(it, context)
-            put(plugin.name, plugin)
-        } catch (e: PluginLoadException) {
-            context.log(PluginLoadError(it.nameWithoutExtension, e))
+suspend fun Context.loadPlugins(directory: Path) = withContext(Dispatchers.IO) {
+    directory.createDirectories()
+    val files = directory.listDirectoryEntries()
+    files.forEach {
+        if (it.isRegularFile() && it.extension == "jar") {
+            try {
+                val plugin = loadPlugin(it)
+                plugins[plugin.name] = plugin
+            } catch (e: PluginLoadException) {
+                log(PluginLoadError(it.nameWithoutExtension, e))
+            }
         }
     }
 }
 
-suspend fun loadPlugin(file: File, context: Context): Plugin = withContext(Dispatchers.IO) {
+suspend fun Context.loadPlugin(file: Path): Plugin = withContext(Dispatchers.IO) {
     if (!file.exists()) throw PluginLoadException("Plugin not found")
-    val url = file.toURI().toURL()
+    val url = file.toUri().toURL()
     val loader = URLClassLoader(arrayOf(url))
     val (name, pluginClassName, apiVersion) = loader.getResourceAsStream("botkit.properties")?.readPluginInfo()
         ?: throw PluginLoadException("Missing 'botkit.properties'")
@@ -38,19 +40,18 @@ suspend fun loadPlugin(file: File, context: Context): Plugin = withContext(Dispa
     if (apiVersion !in SUPPORTED_API_VERSIONS) throw PluginLoadException("API version '$apiVersion' is not supported by this Botkit version (supported versions: ${SUPPORTED_API_VERSIONS.contentToString()})")
     plugin.apply {
         this.name = name
-        this.dataFolder = context.pluginsDirectory.resolve(this.name)
         this.file = file
-        this.context = context
+        this.context = this@loadPlugin
     }
 }
 
-suspend fun File.availablePlugins(): List<File> = withContext(Dispatchers.IO) {
-    listFiles()?.filter { it.isFile && it.extension == "jar" } ?: emptyList()
+suspend fun Path.availablePlugins(): List<Path> = withContext(Dispatchers.IO) {
+    listDirectoryEntries().filter { it.isRegularFile() && it.extension == "jar" }
 }
 
-suspend fun File.availablePluginsNames(): List<String> = availablePlugins().map { it.name }
+suspend fun Path.availablePluginsNames(): List<String> = availablePlugins().map { it.name }
 
-suspend fun File.searchAvailablePlugin(name: String): File? {
+suspend fun Path.searchAvailablePlugin(name: String): Path? {
     val plugin = availablePluginsNames().firstOrNull { it.startsWith(name.removeSuffix(".jar"), ignoreCase = true) }
     return if (plugin == null) null else resolve("$plugin.jar")
 }

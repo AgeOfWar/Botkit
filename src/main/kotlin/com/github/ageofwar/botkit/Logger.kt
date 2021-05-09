@@ -3,15 +3,16 @@ package com.github.ageofwar.botkit
 import com.github.ageofwar.botkit.files.template
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import java.io.File
-import java.io.FileWriter
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import java.io.PrintWriter
 import java.lang.System.currentTimeMillis
+import kotlin.io.path.Path
+import kotlin.io.path.bufferedWriter
+import kotlin.io.path.createDirectories
+import kotlin.io.path.exists
 
 @Serializable
 sealed class Logger {
@@ -41,7 +42,7 @@ class FileLogger(
     private var fileSize = 0
     
     override suspend fun init() = withContext(Dispatchers.IO) {
-        File(directory).mkdirs()
+        Path(directory).createDirectories()
         writer = newWriter()
     }
     
@@ -63,14 +64,14 @@ class FileLogger(
         writer.close()
     }
     
-    private fun newWriter() = PrintWriter(FileWriter(File(directory, fileName()), true))
+    private fun newWriter() = PrintWriter(Path(directory, fileName()).bufferedWriter(), true)
     private fun fileName(): String {
         var i = 0
         var fileName: String
         do {
             fileName = this.fileName.template("date" to currentTimeMillis(), "id" to i)
             i++
-        } while (File(fileName).exists())
+        } while (Path(fileName).exists())
         return fileName
     }
 }
@@ -83,10 +84,4 @@ class PluginsLogger(private val plugins: Plugins) : Logger() {
             }
         }
     }
-}
-
-internal class PluginsSerializer(private val plugins: Plugins) : KSerializer<Plugins> {
-    override val descriptor = PrimitiveSerialDescriptor("plugins", PrimitiveKind.BOOLEAN)
-    override fun deserialize(decoder: Decoder) = plugins
-    override fun serialize(encoder: Encoder, value: Plugins) = Unit
 }

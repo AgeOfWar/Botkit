@@ -3,16 +3,16 @@ package com.github.ageofwar.botkit.plugin
 import com.github.ageofwar.botkit.*
 import com.github.ageofwar.ktelegram.UpdateHandler
 import kotlinx.serialization.json.Json
-import java.io.File
+import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.reflect.KClass
 
 abstract class Plugin {
     val api get() = context.api
+    val dataFolder get() = context.pluginsDirectory.resolve(name)
     lateinit var name: String internal set
-    lateinit var dataFolder: File internal set
-    lateinit var file: File internal set
+    lateinit var file: Path internal set
     val json = Json {
         isLenient = true
         encodeDefaults = true

@@ -5,6 +5,8 @@ import com.github.ageofwar.botkit.plugin.readException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
+import kotlin.io.path.exists
+import kotlin.io.path.readLines
 
 typealias Plugins = MutableMap<String, Plugin>
 

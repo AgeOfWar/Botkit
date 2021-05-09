@@ -9,14 +9,16 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
-import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.nameWithoutExtension
 
 data class Context(
     val api: TelegramApi,
     val logger: Loggers,
     val scope: CoroutineScope,
     val plugins: Plugins,
-    val pluginsDirectory: File,
+    val pluginsDirectory: Path,
     val commands: ConsoleCommands,
     val consoleCommandChannel: Channel<String>
 )
@@ -27,14 +29,14 @@ fun Context.searchPlugin(name: String) = plugins.search(name)
 fun Context.searchPluginName(name: String) = plugins.searchName(name)
 suspend fun Context.searchAvailablePlugin(name: String) = pluginsDirectory.searchAvailablePlugin(name)
 
-suspend fun Context.enablePlugin(file: File): Plugin? {
+suspend fun Context.enablePlugin(file: Path): Plugin? {
     val fileName = file.nameWithoutExtension
-    if (!file.isFile) {
+    if (!file.isRegularFile()) {
         log(PluginLoadError(fileName, PluginLoadException("'$fileName' is not a valid plugin")))
         return null
     }
     val plugin = try {
-        loadPlugin(file, this)
+        loadPlugin(file)
     } catch (e: PluginLoadException) {
         log(PluginLoadError(fileName, e))
         return null
@@ -50,7 +52,7 @@ suspend fun Context.enablePlugin(file: File): Plugin? {
     return null
 }
 
-suspend fun Context.enablePlugins(files: Iterable<File>): List<Plugin> {
+suspend fun Context.enablePlugins(files: Iterable<Path>): List<Plugin> {
     return files.mapNotNull { enablePlugin(it) }
 }
 

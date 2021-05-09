@@ -11,23 +11,21 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
-import java.io.File
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.io.path.Path
 import kotlin.system.exitProcess
 
 fun main(vararg args: String) = runBlocking {
     val (overrideToken) = parseArgs(*args)
     val plugins = ConcurrentHashMap<String, Plugin>()
-    val json = buildJson(plugins)
+    val json = buildJson()
     val logger = loadLogger(plugins, json)
     val (token, apiUrl) = loadBotConfig(overrideToken, json)
     token ?: error("Insert 'bot_token' field into bot.json")
     val botkit = loadBotkitConfig(json)
     val api = TelegramApi(token, apiUrl)
     val bot = api.getMe()
-    val pluginsDirectory = File("plugins")
+    val pluginsDirectory = Path("plugins")
     val commands = ConcurrentHashMap<String, ConsoleCommand>()
     val consoleCommandChannel = Channel<String>()
     with(Context(api, logger, this, plugins, pluginsDirectory, commands, consoleCommandChannel)) {
@@ -49,13 +47,13 @@ fun main(vararg args: String) = runBlocking {
 
 private suspend fun Context.loadPlugins() {
     println("Loading plugins...")
-    plugins.loadPlugins(File("plugins"), this)
+    loadPlugins(Path("plugins"))
     log(PluginsEnabled(plugins.keys))
 }
 
 private suspend fun loadLogger(plugins: Plugins, json: Json): Loggers {
     print("Loading loggers... ")
-    val logger = json.readFileOrCopy<SerializableLoggers>(File("loggers.json"), "loggers.json") {
+    val logger = json.readFileOrCopy<SerializableLoggers>(Path("loggers.json"), "loggers.json") {
         if (it is SerializationException) {
             error("Invalid loggers.json file. Please update loggers.json or delete it")
         } else {
@@ -69,7 +67,7 @@ private suspend fun loadLogger(plugins: Plugins, json: Json): Loggers {
 
 private suspend fun loadBotConfig(overrideToken: String?, json: Json): BotConfig {
     print("Loading bot information... ")
-    val config = json.readFileOrCopy<BotConfig>(File("bot.json"), "bot.json") {
+    val config = json.readFileOrCopy<BotConfig>(Path("bot.json"), "bot.json") {
         if (it is SerializationException) {
             error("Invalid bot.json file. Please update your bot.json or delete it")
         } else {
@@ -83,7 +81,7 @@ private suspend fun loadBotConfig(overrideToken: String?, json: Json): BotConfig
 
 private suspend fun loadBotkitConfig(json: Json): BotkitConfig {
     print("Loading bot configuration... ")
-    val botkit = json.readFileOrCopy<BotkitConfig>(File("botkit.json"), "botkit.json") {
+    val botkit = json.readFileOrCopy<BotkitConfig>(Path("botkit.json"), "botkit.json") {
         if (it is SerializationException) {
             error("Invalid botkit.json file. Please update your botkit.json or delete it")
         } else {
@@ -113,12 +111,9 @@ private fun String.censureToken() = mapIndexed { i, c ->
     if (c == ':' || i > lastIndex - 3) c else '*'
 }.joinToString("")
 
-private fun buildJson(plugins: Plugins) = Json {
+private fun buildJson() = Json {
     isLenient = true
     encodeDefaults = true
     ignoreUnknownKeys = true
     prettyPrint = true
-    serializersModule = SerializersModule {
-        contextual(PluginsSerializer(plugins))
-    }
 }
