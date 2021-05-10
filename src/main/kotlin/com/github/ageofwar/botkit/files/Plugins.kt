@@ -10,7 +10,7 @@ import java.nio.file.Path
 import java.util.*
 import kotlin.io.path.*
 
-val SUPPORTED_API_VERSIONS = arrayOf("0.3")
+val SUPPORTED_API_VERSIONS = arrayOf("0.3", "0.4")
 
 suspend fun Context.loadPlugin(file: Path): Plugin = withContext(Dispatchers.IO) {
     if (!file.exists()) throw PluginLoadException("Plugin not found")

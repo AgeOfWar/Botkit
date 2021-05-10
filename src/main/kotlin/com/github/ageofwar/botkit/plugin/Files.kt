@@ -24,7 +24,6 @@ fun Plugin.readException(file: String, cause: Throwable): Nothing = when (cause)
     is IOException -> ioException(file, cause)
     else -> exception(cause = cause)
 }
-
 fun Plugin.writeException(file: String, cause: Throwable): Nothing = when (cause) {
     is SerializationException -> serializeException(file, cause)
     is IOException -> ioException(file, cause)
@@ -32,8 +31,17 @@ fun Plugin.writeException(file: String, cause: Throwable): Nothing = when (cause
 }
 
 fun Plugin.file(path: String): Path = dataFolder.resolve(path)
-suspend fun Plugin.createDirectories(path: String): Path = withContext(Dispatchers.IO) { file(path).createDirectories() }
+
+suspend fun createFile(path: Path): Path = withContext(Dispatchers.IO) { path.createFile() }
+suspend fun Plugin.createFile(path: String): Path = createFile(file(path))
+suspend fun createDirectory(path: Path): Path = withContext(Dispatchers.IO) { path.createDirectory() }
+suspend fun Plugin.createDirectory(path: String): Path = createDirectory(file(path))
 suspend fun createDirectories(path: Path): Path = withContext(Dispatchers.IO) { path.createDirectories() }
+suspend fun Plugin.createDirectories(path: String): Path = createDirectories(file(path))
+suspend fun listDirectoryEntries(path: Path, glob: String = "*"): List<Path> = withContext(Dispatchers.IO) { path.listDirectoryEntries(glob) }
+suspend fun Plugin.listDirectoryEntries(path: String, glob: String = "*"): List<Path> = listDirectoryEntries(file(path), glob)
+suspend fun forEachDirectoryEntry(path: Path, glob: String = "*", action: (Path) -> Unit): Unit = withContext(Dispatchers.IO) { path.forEachDirectoryEntry(glob, action) }
+suspend fun Plugin.forEachDirectoryEntry(path: String, glob: String = "*", action: (Path) -> Unit): Unit = forEachDirectoryEntry(file(path), glob, action)
 
 suspend inline fun <R> Plugin.readFile(
     file: Path,
