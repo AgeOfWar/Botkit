@@ -1,8 +1,6 @@
 package com.github.ageofwar.botkit.plugin
 
-import com.github.ageofwar.botkit.files.readFileAs
-import com.github.ageofwar.botkit.files.readFileOrCopy
-import com.github.ageofwar.botkit.files.writeFile
+import com.github.ageofwar.botkit.files.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
@@ -22,16 +20,18 @@ fun Plugin.ioException(file: String, cause: IOException): Nothing = exception("C
 fun Plugin.readException(file: String, cause: Throwable): Nothing = when (cause) {
     is SerializationException -> deserializeException(file, cause)
     is IOException -> ioException(file, cause)
-    else -> exception(cause = cause)
+    else -> exception(cause.message, cause)
 }
 fun Plugin.writeException(file: String, cause: Throwable): Nothing = when (cause) {
     is SerializationException -> serializeException(file, cause)
     is IOException -> ioException(file, cause)
-    else -> exception(cause = cause)
+    else -> exception(cause.message, cause)
 }
 
 fun Plugin.file(path: String): Path = dataFolder.resolve(path)
 
+suspend fun exists(path: Path): Boolean = withContext(Dispatchers.IO) { path.exists() }
+suspend fun Plugin.exists(path: String): Boolean = exists(file(path))
 suspend fun createFile(path: Path): Path = withContext(Dispatchers.IO) { path.createFile() }
 suspend fun Plugin.createFile(path: String): Path = createFile(file(path))
 suspend fun createDirectory(path: Path): Path = withContext(Dispatchers.IO) { path.createDirectory() }
@@ -49,9 +49,13 @@ suspend inline fun <R> Plugin.readFile(
     crossinline exceptionHandler: (Throwable) -> R = { readException(file.name, it) },
     vararg options: OpenOption,
     crossinline block: Reader.() -> R
-): R = withContext(Dispatchers.IO) {
-    try {
-        file.bufferedReader(charset, options = options).use { it.block() }
+): R {
+    return try {
+        file.suspendBufferedReader(charset, options = options).use {
+            withContext(Dispatchers.IO) {
+                it.block()
+            }
+        }
     } catch (e: Throwable) {
         exceptionHandler(e)
     }
@@ -72,16 +76,16 @@ suspend inline fun <R> Plugin.readFileOrCopy(
     crossinline exceptionHandler: (Throwable) -> R = { readException(file.name, it) },
     vararg options: OpenOption,
     crossinline block: Reader.() -> R
-): R = withContext(Dispatchers.IO) {
-    try {
+): R {
+    return try {
         if (!file.exists()) {
             try {
-                file.parent?.createDirectories()
+                file.parent?.suspendCreateDirectories()
                 javaClass.classLoader.getResourceAsStream("config/$defaultPath")?.use {
-                    it.copyTo(file.outputStream())
+                    it.suspendCopyTo(file.suspendOutputStream())
                 } ?: throw FileNotFoundException("cannot find resource on config/$defaultPath")
             } catch (e: Throwable) {
-                exceptionHandler(e)
+                return exceptionHandler(e)
             }
         }
         readFile(file, charset, exceptionHandler, options = options, block)
@@ -105,9 +109,13 @@ suspend inline fun Plugin.writeFile(
     crossinline exceptionHandler: (Throwable) -> Unit = { writeException(file.name, it) },
     vararg options: OpenOption,
     crossinline block: Writer.() -> Unit
-) = withContext(Dispatchers.IO) {
+) {
     try {
-        file.bufferedWriter(charset, options = options).use { it.block() }
+        file.suspendBufferedWriter(charset, options = options).use {
+            withContext(Dispatchers.IO) {
+                it.block()
+            }
+        }
     } catch (e: Throwable) {
         exceptionHandler(e)
     }
