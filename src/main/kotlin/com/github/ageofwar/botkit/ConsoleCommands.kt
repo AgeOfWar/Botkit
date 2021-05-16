@@ -1,17 +1,19 @@
 package com.github.ageofwar.botkit
 
-import com.github.ageofwar.botkit.plugin.template
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import java.net.MalformedURLException
+import java.net.URL
 
 typealias ConsoleCommands = MutableMap<String, ConsoleCommand>
 
 interface ConsoleCommand {
     suspend fun handle(name: String, args: String)
-    fun usage(format: Strings): String?
+    
+    suspend fun Context.logUsage(name: String) = log(Usage(logger.strings.commands[name]?.usage))
 }
 
 suspend fun Context.listenCommands(unknownCommand: ConsoleCommand = OtherPluginsCommand(this)) {
@@ -65,24 +67,29 @@ class UnknownCommand(private val logger: Loggers) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) {
         logger.log(UnknownCommandName(name, args))
     }
-    
-    override fun usage(format: Strings): Nothing? = null
 }
 
 class StopCommand(private val context: Context) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) {
         context.consoleCommandChannel.close()
     }
-    
-    override fun usage(format: Strings) = format.commands.stop
 }
 
 class EnablePluginCommand(private val context: Context) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) = with(context) {
-        if (args.isEmpty()) return log(Usage(usage(logger.strings)))
+        if (args.isEmpty()) return logUsage(name)
         if (args == "*") return handle(name)
-        val pluginFile = searchAvailablePlugin(args) ?: return log(PluginNotAvailable(args))
-        val plugin = enablePlugin(pluginFile)
+        val pluginFile = searchAvailablePlugin(args)
+        val plugin = if (pluginFile != null) {
+            enablePlugin(pluginFile)
+        } else {
+            try {
+                val url = URL(args)
+                enablePlugin(url)
+            } catch (e: MalformedURLException) {
+                return log(PluginNotAvailable(args))
+            }
+        }
         if (plugin != null) {
             log(PluginEnabled(plugin.name))
             reloadCommands()
@@ -94,13 +101,11 @@ class EnablePluginCommand(private val context: Context) : ConsoleCommand {
         log(PluginsEnabled(enabled.map { it.name }))
         reloadCommands()
     }
-    
-    override fun usage(format: Strings) = format.commands.enable
 }
 
 class DisablePluginCommand(private val context: Context) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) = with(context) {
-        if (args.isEmpty()) return log(Usage(usage(logger.strings)))
+        if (args.isEmpty()) return logUsage(name)
         if (args == "*") return handle(name)
         val pluginName = searchPluginName(args) ?: return log(PluginNotEnabled(args))
         val plugin = disablePlugin(pluginName)
@@ -115,16 +120,12 @@ class DisablePluginCommand(private val context: Context) : ConsoleCommand {
         log(PluginsDisabled(disabled.map { it.name }))
         reloadCommands()
     }
-    
-    override fun usage(format: Strings) = format.commands.disable
 }
 
 class PluginsCommand(private val context: Context) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) = with(context) {
         log(ShowPlugins(plugins.keys, getAvailablePluginsNames()))
     }
-    
-    override fun usage(format: Strings) = format.commands.plugins
 }
 
 class ReloadPluginsCommand(private val context: Context) : ConsoleCommand {
@@ -145,8 +146,6 @@ class ReloadPluginsCommand(private val context: Context) : ConsoleCommand {
         val reloadedPlugins = reloadPlugins(plugins.keys)
         log(PluginsReloaded(reloadedPlugins.map { it.name }))
     }
-    
-    override fun usage(format: Strings) = format.commands.reload
 }
 
 class OtherPluginsCommand(
@@ -159,18 +158,20 @@ class OtherPluginsCommand(
             val plugins = plugins.values.filter { it.consoleCommands.containsKey(name) }
             when (plugins.size) {
                 0 -> unknownCommand.handle(name, args)
-                1 -> plugins[0].consoleCommands[name]?.handle(name, args)
+                1 -> {
+                    val plugin = plugins[0]
+                    with(plugin.consoleCommands[name]!!) { plugin.handle(name, args) }
+                }
                 else -> log(Conflict(name, plugins.map { it.name }))
             }
         } else {
             val (pluginName, commandName) = nameParts
             if (pluginName == "Botkit") return commands[commandName]?.handle(name, args) ?: unknownCommand.handle(name, args)
             val plugin = plugins[pluginName] ?: return log(PluginNotEnabled(pluginName))
-            plugin.consoleCommands[commandName]?.handle(name, args) ?: unknownCommand.handle(name, args)
+            val command = plugin.consoleCommands[commandName] ?: return unknownCommand.handle(name, args)
+            with(command) { plugin.handle(name, args) }
         }
     }
-    
-    override fun usage(format: Strings): Nothing? = null
 }
 
 class HelpCommand(
@@ -179,24 +180,22 @@ class HelpCommand(
     @OptIn(ExperimentalStdlibApi::class)
     override suspend fun handle(name: String, args: String) = with(context) {
         if (args.isEmpty()) {
-            val commands = buildMap<String, Map<String, String?>> {
-                put("Botkit", commands.mapValues { (name, command) -> command.usage(logger.strings)?.template("name" to name) })
+            val commands = buildMap<String, Map<String, Strings.Command>> {
+                put("Botkit", commands.mapValues { (name, _) -> logger.strings.commands[name] ?: Strings.Command() })
                 plugins.forEach { (name, plugin) ->
-                    put(name, plugin.consoleCommands.mapValues { (name, command) -> command.usage?.template("name" to name) })
+                    put(name, plugin.consoleCommands.mapValues { (_, command) -> Strings.Command(command.usage, command.description) })
                 }
             }
             return log(ShowCommands(commands))
         }
-        val commands = buildMap<String, String?> {
+        val commands = buildMap<String, Strings.Command> {
             val botkitCommand = commands[args]
-            if (botkitCommand != null) put("Botkit", botkitCommand.usage(logger.strings)?.template("name" to args))
+            if (botkitCommand != null) put("Botkit", logger.strings.commands[args] ?: Strings.Command())
             plugins.forEach { (name, plugin) ->
                 val pluginCommand = plugin.consoleCommands[args]
-                if (pluginCommand != null) put(name, pluginCommand.usage?.template("name" to args))
+                if (pluginCommand != null) put(name, Strings.Command(pluginCommand.usage, pluginCommand.description))
             }
         }
         log(ShowCommand(args, commands))
     }
-    
-    override fun usage(format: Strings) = format.commands.help
 }

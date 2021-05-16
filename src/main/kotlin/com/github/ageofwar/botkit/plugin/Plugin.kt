@@ -3,6 +3,7 @@ package com.github.ageofwar.botkit.plugin
 import com.github.ageofwar.botkit.*
 import com.github.ageofwar.ktelegram.UpdateHandler
 import kotlinx.serialization.json.Json
+import java.net.URL
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
@@ -10,9 +11,9 @@ import kotlin.reflect.KClass
 
 abstract class Plugin {
     val api get() = context.api
-    val dataFolder get() = context.pluginsDirectory.resolve(name)
+    val dataFolder: Path get() = context.pluginsDirectory.resolve(name)
     lateinit var name: String internal set
-    lateinit var file: Path internal set
+    lateinit var url: URL internal set
     val json = Json {
         isLenient = true
         encodeDefaults = true
@@ -65,12 +66,13 @@ interface PluginLogger {
 }
 
 interface PluginCommand {
-    suspend fun handle(name: String, args: String)
+    suspend fun Plugin.handle(name: String, args: String)
     val usage: String? get() = null
+    val description: String? get() = null
     
     fun Plugin.logUsage(name: String) {
-        val usage = usage ?: return
-        log("Usage: ${usage.template("name" to name)}")
+        val usage = usage ?: return log("Incorrect usage")
+        log("Usage: $name $usage")
     }
 }
 

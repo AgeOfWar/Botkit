@@ -5,17 +5,22 @@ import com.github.ageofwar.botkit.plugin.Plugin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.InputStream
+import java.net.URL
 import java.net.URLClassLoader
 import java.nio.file.Path
 import java.util.*
-import kotlin.io.path.*
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.name
 
-val SUPPORTED_API_VERSIONS = arrayOf("0.3", "0.4", "0.5")
+val SUPPORTED_API_VERSIONS = arrayOf("1.0")
 
-suspend fun Context.loadPlugin(file: Path): Plugin = withContext(Dispatchers.IO) {
-    if (!file.exists()) throw PluginLoadException("Plugin not found")
-    val url = file.toUri().toURL()
-    val loader = URLClassLoader(arrayOf(url))
+suspend fun Context.loadPlugin(url: URL): Plugin = withContext(Dispatchers.IO) {
+    val loader = try {
+        URLClassLoader(arrayOf(url))
+    } catch (e: Throwable) {
+        throw PluginLoadException(e.message ?: "Cannot access url '$url'", e)
+    }
     val (name, pluginClassName, apiVersion) = loader.getResourceAsStream("botkit.properties")?.readPluginInfo()
         ?: throw PluginLoadException("Missing 'botkit.properties'")
     val plugin = loader.loadClass(pluginClassName)?.getConstructor()?.newInstance()
@@ -23,13 +28,15 @@ suspend fun Context.loadPlugin(file: Path): Plugin = withContext(Dispatchers.IO)
     if (apiVersion !in SUPPORTED_API_VERSIONS) throw PluginLoadException("API version '$apiVersion' is not supported by this Botkit version (supported versions: ${SUPPORTED_API_VERSIONS.contentToString()})")
     plugin.apply {
         this.name = name
-        this.file = file
+        this.url = url
         this.context = this@loadPlugin
     }
 }
 
+suspend fun Context.loadPlugin(file: Path): Plugin = loadPlugin(file.toUri().toURL())
+
 suspend fun Path.availablePlugins(): List<Path> = withContext(Dispatchers.IO) {
-    listDirectoryEntries().filter { it.isRegularFile() && it.extension == "jar" }
+    listDirectoryEntries("*.jar").filter { it.isRegularFile() }
 }
 
 suspend fun Path.availablePluginsNames(): List<String> = availablePlugins().map { it.name }
@@ -39,7 +46,7 @@ suspend fun Path.searchAvailablePlugin(name: String): Path? {
     return if (plugin == null) null else resolve(plugin)
 }
 
-class PluginLoadException(override val message: String) : Exception(message)
+class PluginLoadException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
 data class PluginInfo(
     val name: String,

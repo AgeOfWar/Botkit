@@ -31,15 +31,11 @@ data class Strings(
     @SerialName("show_command") val showCommand: String?,
     @SerialName("show_commands") val showCommands: String?,
     @SerialName("show_usage") val showUsage: String?,
-    val commands: Commands
+    val commands: Map<String, Command>
 ) {
     @Serializable
-    data class Commands(
-        val stop: String?,
-        val enable: String?,
-        val disable: String?,
-        val plugins: String?,
-        val reload: String?,
-        val help: String?
+    data class Command(
+        val usage: String? = null,
+        val description: String? = null
     )
 }

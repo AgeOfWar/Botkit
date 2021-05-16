@@ -6,26 +6,39 @@ import com.github.ageofwar.botkit.plugin.readException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
+import java.net.URL
 import java.nio.file.Path
 import kotlin.io.path.exists
-import kotlin.io.path.isRegularFile
-import kotlin.io.path.nameWithoutExtension
+import kotlin.io.path.name
 import kotlin.io.path.readLines
 
 typealias Plugins = MutableMap<String, Plugin>
 
 suspend fun Context.getAvailablePluginsNames() = pluginsDirectory.availablePluginsNames()
 suspend fun Context.getAvailablePlugins() = pluginsDirectory.availablePlugins()
-fun Context.searchPlugin(name: String) = plugins.search(name)
 fun Context.searchPluginName(name: String) = plugins.searchName(name)
 suspend fun Context.searchAvailablePlugin(name: String) = pluginsDirectory.searchAvailablePlugin(name)
 
-suspend fun Context.enablePlugin(file: Path): Plugin? {
-    val fileName = file.nameWithoutExtension
-    if (!file.isRegularFile()) {
-        log(PluginLoadError(fileName, PluginLoadException("'$fileName' is not a valid plugin")))
+suspend fun Context.enablePlugin(url: URL): Plugin? {
+    val plugin = try {
+        loadPlugin(url)
+    } catch (e: PluginLoadException) {
+        log(PluginLoadError(url.toString(), e))
         return null
     }
+    if (plugin.name in plugins) {
+        log(PluginAlreadyEnabled(plugin.name))
+        return null
+    }
+    if (plugin.init(this)) {
+        plugins[plugin.name] = plugin
+        return plugin
+    }
+    return null
+}
+
+suspend fun Context.enablePlugin(file: Path): Plugin? {
+    val fileName = file.name
     val plugin = try {
         loadPlugin(file)
     } catch (e: PluginLoadException) {
@@ -64,7 +77,7 @@ suspend fun Context.disablePlugins(names: Iterable<String>): List<Plugin> {
 
 suspend fun Context.reloadPlugin(name: String): Plugin? {
     val plugin = disablePlugin(name) ?: return null
-    return enablePlugin(plugin.file)
+    return enablePlugin(plugin.url)
 }
 
 suspend fun Context.reloadPlugins(names: Iterable<String>): List<Plugin> {

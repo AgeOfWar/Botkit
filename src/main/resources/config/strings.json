@@ -22,15 +22,33 @@
   "unknown_command": "Unknown command '${event.name}'",
   "show_plugins": "Enabled plugins: [${event.enabled?join(\", \")}], Available plugins: [${event.available?join(\", \")}]",
   "command_conflict": "Command conflict, please use ${event.plugins?join(\"/ or \")}/ as command prefix",
-  "show_commands": "List of commands:<#list event.commands?keys as plugin><#list event.commands[plugin]?keys as name>\n${plugin}/${name} - ${event.commands[plugin][name]!}</#list></#list>",
-  "show_command": "<#list event.commands?keys as plugin>${plugin}/${event.name} - ${event.commands[plugin]!}<#sep> or </#list>",
+  "show_commands": "List of commands:<#list event.commands?keys as plugin><#list event.commands[plugin]?keys as name>\n${plugin}/${name} <#if event.commands[plugin][name].usage?has_content>${event.commands[plugin][name].usage} </#if><#if event.commands[plugin][name].description?has_content>- ${event.commands[plugin][name].description}</#if></#list></#list>",
+  "show_command": "${event.name} command:<#list event.commands?keys as plugin>\n${plugin}/${event.name} <#if event.commands[plugin].usage?has_content>${event.commands[plugin].usage} </#if><#if event.commands[plugin].description?has_content>- ${event.commands[plugin].description}</#if></#list>",
   "show_usage": "Usage: ${event.usage}",
   "commands": {
-    "stop": "${name}",
-    "enable": "${name} <plugin|*>",
-    "disable": "${name} <plugin|*>",
-    "plugins": "${name}",
-    "reload": "${name} [plugin|*]",
-    "help": "${name} [command]"
+    "stop": {
+      "usage": "",
+      "description": "Stops Botkit"
+    },
+    "enable": {
+      "usage": "<plugin|*>",
+      "description": "Enables plugin in 'plugins' folder or pass url to enable remote plugin"
+    },
+    "disable": {
+      "usage": "<plugin|*>",
+      "description": "Disables enabled plugin"
+    },
+    "plugins": {
+      "usage": "",
+      "description": "Shows list of all enabled and available plugins"
+    },
+    "reload": {
+      "usage": "[plugin|*]",
+      "description": "Reloads enabled plugin"
+    },
+    "help": {
+      "usage": "[command]",
+      "description": "Shows list of all available commands"
+    }
   }
 }

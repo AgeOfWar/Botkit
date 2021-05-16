@@ -117,10 +117,10 @@ data class Conflict(val name: String, val plugins: Iterable<String>) : LoggerEve
     override fun message(format: Strings) = format.commandConflict
 }
 
-data class ShowCommand(val name: String, val commands: Map<String, String?>) : LoggerEvent {
+data class ShowCommand(val name: String, val commands: Map<String, Strings.Command>) : LoggerEvent {
     override fun message(format: Strings) = format.showCommand
 }
 
-data class ShowCommands(val commands: Map<String, Map<String, String?>>) : LoggerEvent {
+data class ShowCommands(val commands: Map<String, Map<String, Strings.Command>>) : LoggerEvent {
     override fun message(format: Strings) = format.showCommands
 }
