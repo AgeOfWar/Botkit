@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    api("com.github.AgeOfWar:KTelegram:0.9")
+    api("com.github.AgeOfWar:KTelegram:1.0")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
     implementation("org.freemarker:freemarker:2.3.31")
 }
