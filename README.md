@@ -68,11 +68,12 @@ Remember to add `botkit.properties` file in your resource source set:
 ```properties
 name=MyPlugin
 pluginClassName=com.example.myplugin.MyPlugin
-apiVersion=0.5
+apiVersion=1.0
 ```
 
 | Botkit version | apiVersion | supported apiVersion |
 |----------------|------------|----------------------|
+| 1.1            | 1.0        | 1.0                  |
 | 1.0            | 1.0        | 1.0                  |
 | 0.12           | 0.5        | 0.5, 0.4, 0.3        |
 | 0.11           | 0.4        | 0.4, 0.3             |
