@@ -13,7 +13,7 @@ import kotlin.io.path.isRegularFile
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
 
-val SUPPORTED_API_VERSIONS = arrayOf("1.0", "1.2")
+val SUPPORTED_API_VERSIONS = arrayOf("1.0", "1.2", "1.3")
 
 suspend fun Context.loadPlugin(url: URL): Plugin = withContext(Dispatchers.IO) {
     val loader = try {
