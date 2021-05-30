@@ -1,6 +1,8 @@
 package com.github.ageofwar.botkit.plugin
 
 import com.github.ageofwar.ktelegram.*
+import com.github.ageofwar.ktelegram.text.parseHtml
+import com.github.ageofwar.ktelegram.text.parseMarkdown
 import com.github.ageofwar.ktelegram.text.toMarkdown
 import freemarker.core.CommonMarkupOutputFormat
 import freemarker.core.CommonTemplateMarkupOutputModel
@@ -26,18 +28,18 @@ private fun String.template(args: Map<String, Any?>, configuration: Configuratio
     return writer.toString()
 }
 
-fun String.template(args: Map<String, Any?>) = template(args) {  }
+fun String.template(args: Map<String, Any?>) = template(args) { }
 fun String.template(vararg args: Pair<String, Any?>) = template(args.toMap())
 
-fun Text.Companion.parseMarkdown(text: String, args: Map<String, Any?>): Text = parseMarkdown(text.template(args) { outputFormat = MarkdownOutputFormat })
-fun Text.Companion.parseMarkdown(text: String, vararg args: Pair<String, Any?>): Text = parseMarkdown(text, args.toMap())
-fun Text.Companion.parseHtml(text: String, args: Map<String, Any?>): Text = parseHtml(text.template(args) { outputFormat = HtmlOutputFormat })
-fun Text.Companion.parseHtml(text: String, vararg args: Pair<String, Any?>): Text = parseHtml(text, args.toMap())
+fun Text.Companion.templateMarkdown(text: String, args: Map<String, Any?>): Text = parseMarkdown(text.template(args) { outputFormat = MarkdownOutputFormat })
+fun Text.Companion.templateMarkdown(text: String, vararg args: Pair<String, Any?>): Text = templateMarkdown(text, args.toMap())
+fun Text.Companion.templateHtml(text: String, args: Map<String, Any?>): Text = parseHtml(text.template(args) { outputFormat = HtmlOutputFormat })
+fun Text.Companion.templateHtml(text: String, vararg args: Pair<String, Any?>): Text = templateHtml(text, args.toMap())
 
-fun Text.templateMarkdownText(args: Map<String, Any?>) = Text.parseMarkdown(text, args)
-fun Text.templateMarkdownText(vararg args: Pair<String, Any?>) = Text.parseMarkdown(text, args.toMap())
-fun Text.templateHtmlText(args: Map<String, Any?>) = Text.parseHtml(text, args)
-fun Text.templateHtmlText(vararg args: Pair<String, Any?>) = Text.parseHtml(text, args.toMap())
+fun Text.templateMarkdownText(args: Map<String, Any?>) = Text.templateMarkdown(text, args)
+fun Text.templateMarkdownText(vararg args: Pair<String, Any?>) = Text.templateMarkdown(text, args.toMap())
+fun Text.templateHtmlText(args: Map<String, Any?>) = Text.templateHtml(text, args)
+fun Text.templateHtmlText(vararg args: Pair<String, Any?>) = Text.templateHtml(text, args.toMap())
 
 fun MessageContent<*>.templateMarkdownText(args: Map<String, Any?>) = when(this) {
     is TextContent -> copy(text = text.templateMarkdownText(args))
