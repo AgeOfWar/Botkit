@@ -8,7 +8,6 @@ import freemarker.core.CommonMarkupOutputFormat
 import freemarker.core.CommonTemplateMarkupOutputModel
 import freemarker.template.Configuration
 import freemarker.template.Template
-import freemarker.template.TemplateException
 import java.io.StringWriter
 import java.io.Writer
 
@@ -17,14 +16,11 @@ private fun String.template(args: Map<String, Any?>, configuration: Configuratio
     val writer = StringWriter()
     val configuration = Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS).apply {
         registeredCustomOutputFormats = listOf(MarkdownOutputFormat, HtmlOutputFormat)
+        logTemplateExceptions = false
         configuration()
     }
     val template = Template("Botkit", reader, configuration)
-    try {
-        template.process(args, writer)
-    } catch (e: TemplateException) {
-        return this
-    }
+    template.process(args, writer)
     return writer.toString()
 }
 
