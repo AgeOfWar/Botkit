@@ -26,7 +26,8 @@ fun Context.addDefaultConsoleCommands() = commands.putAll(arrayOf(
     "enable" to EnablePluginCommand(this),
     "disable" to DisablePluginCommand(this),
     "plugins" to PluginsCommand(this),
-    "reload" to ReloadPluginsCommand(this)
+    "reload" to ReloadPluginsCommand(this),
+    "debug" to DebugCommand(this)
 ))
 
 suspend fun Context.log(event: LoggerEvent) = logger.log(event)

@@ -18,7 +18,7 @@ data class SerializableLoggers(
 class Loggers(
     private val logFormat: String,
     private val loggers: List<Logger>,
-    private val verboseErrors: Boolean,
+    var verboseErrors: Boolean,
     val strings: Strings
 ) {
     suspend fun log(event: LoggerEvent) {

@@ -32,6 +32,7 @@ data class Strings(
     @SerialName("show_command") val showCommand: String?,
     @SerialName("show_commands") val showCommands: String?,
     @SerialName("show_usage") val showUsage: String?,
+    @SerialName("debug_mode") val debugMode: String?,
     val commands: Map<String, Command>
 ) {
     @Serializable

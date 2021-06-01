@@ -129,3 +129,7 @@ data class ShowCommand(val name: String, val commands: Map<String, Strings.Comma
 data class ShowCommands(val commands: Map<String, Map<String, Strings.Command>>) : LoggerEvent {
     override fun message(format: Strings) = format.showCommands
 }
+
+data class DebugMode(val debug: Boolean) : LoggerEvent {
+    override fun message(format: Strings) = format.debugMode
+}

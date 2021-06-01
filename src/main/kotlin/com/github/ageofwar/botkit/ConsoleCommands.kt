@@ -148,6 +148,13 @@ class ReloadPluginsCommand(private val context: Context) : ConsoleCommand {
     }
 }
 
+class DebugCommand(private val context: Context) : ConsoleCommand {
+    override suspend fun handle(name: String, args: String) = with(context) {
+        logger.verboseErrors = !logger.verboseErrors
+        log(DebugMode(logger.verboseErrors))
+    }
+}
+
 class OtherPluginsCommand(
     private val context: Context,
     private val unknownCommand: ConsoleCommand = UnknownCommand(context.logger)
