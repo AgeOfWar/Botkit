@@ -1,6 +1,7 @@
 {
   "bot_start": "Started ${event.bot.username}",
   "bot_stop": "Stopping ${event.bot.username}",
+  "long_polling_error": "An error occurred while fetching new updates",
   "old_update": null,
   "new_update": null,
   "plugin_load_error": "An error occurred while loading plugin '${event.plugin}'",

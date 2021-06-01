@@ -27,7 +27,7 @@ class Loggers(
             log(event.throwable?.stackTraceToString(), event.category, event.level)
         } else {
             val message = event.message(strings)?.template("event" to event)
-            val error = event.throwable?.message
+            val error = event.throwable?.message ?: event.throwable?.cause?.message
             when {
                 message != null && error != null -> log("$message: $error", event.category, event.level)
                 message != null -> log(message, event.category, event.level)

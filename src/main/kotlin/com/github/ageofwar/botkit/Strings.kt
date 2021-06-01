@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 data class Strings(
     @SerialName("bot_start") val botStart: String?,
     @SerialName("bot_stop") val botStop: String?,
+    @SerialName("long_polling_error") val longPollingError: String?,
     @SerialName("old_update") val oldUpdate: String?,
     @SerialName("new_update") val newUpdate: String?,
     @SerialName("plugin_load_error") val pluginLoadError: String?,

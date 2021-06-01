@@ -19,6 +19,11 @@ data class BotStop(val bot: DetailedBot) : LoggerEvent {
     override fun message(format: Strings) = format.botStop
 }
 
+data class LongPollingError(override val throwable: Throwable) : LoggerEvent {
+    override fun message(format: Strings) = format.longPollingError
+    override val level = "ERROR"
+}
+
 data class OldUpdate(val update: Update) : LoggerEvent {
     override fun message(format: Strings) = format.oldUpdate
 }

@@ -11,7 +11,7 @@ import java.util.concurrent.CancellationException
 
 class ErrorLogger(private val logger: Loggers) : ExceptionHandler {
     override suspend fun handle(exception: Throwable) {
-        logger.log(exception.stackTraceToString(), "Botkit", "ERROR")
+        logger.log(LongPollingError(exception))
     }
 }
 
