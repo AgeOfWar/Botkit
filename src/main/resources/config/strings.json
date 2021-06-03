@@ -24,11 +24,11 @@
   "show_plugins": "Enabled plugins: [${event.enabled?join(\", \")}], Available plugins: [${event.available?join(\", \")}]",
   "command_conflict": "Command conflict, please use ${event.plugins?join(\"/ or \")}/ as command prefix",
   "show_commands": "List of commands:<#list event.commands?keys as plugin><#list event.commands[plugin]?keys as name>\n${plugin}/${name} <#if event.commands[plugin][name].usage?has_content>${event.commands[plugin][name].usage} </#if><#if event.commands[plugin][name].description?has_content>- ${event.commands[plugin][name].description}</#if></#list></#list>",
-  "show_command": "${event.name} command:<#list event.commands?keys as plugin>\n${plugin}/${event.name} <#if event.commands[plugin].usage?has_content>${event.commands[plugin].usage} </#if><#if event.commands[plugin].description?has_content>- ${event.commands[plugin].description}</#if></#list>",
+  "show_command": "<#if event.commands?has_content>${event.name} command:<#list event.commands?keys as plugin>\n${plugin}/${event.name} <#if event.commands[plugin].usage?has_content>${event.commands[plugin].usage} </#if><#if event.commands[plugin].description?has_content>- ${event.commands[plugin].description}</#if></#list><#else>Unknown command '${event.name}'</#if>",
   "show_usage": "Usage: ${event.usage}",
   "debug_mode": "Verbose errors <#if event.debug>enabled<#else>disabled</#if>",
-  "file_not_exists": "File '${path}' not exists",
-  "file_already_exists": "File '${path}' already exists",
+  "file_not_exists": "File '${event.path}' not exists",
+  "file_already_exists": "File '${event.path}' already exists",
   "commands": {
     "stop": {
       "usage": "",
@@ -58,23 +58,23 @@
       "usage": "",
       "description": "Enables or disables verbose errors"
     },
-    "settings": {
+    "file": {
       "usage": "read|write|new|remove <path> [...]",
       "description": "Reads or writes plugin file"
     },
-    "settings read": {
+    "file read": {
       "usage": "<path>",
       "description": "Reads plugin file"
     },
-    "settings write": {
+    "file write": {
       "usage": "<path> <new content>",
       "description": "Writes plugin file"
     },
-    "settings new": {
+    "file new": {
       "usage": "<path> <new content>",
       "description": "Creates plugin file"
     },
-    "settings remove": {
+    "file remove": {
       "usage": "<path>",
       "description": "Removes plugin file"
     }

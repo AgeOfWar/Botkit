@@ -22,7 +22,7 @@ data class BotStop(val bot: DetailedBot) : LoggerEvent {
 
 data class LongPollingError(override val throwable: Throwable) : LoggerEvent {
     override fun message(format: Strings) = format.longPollingError
-    override val level = "ERROR"
+    override val level = "WARNING"
 }
 
 data class OldUpdate(val update: Update) : LoggerEvent {

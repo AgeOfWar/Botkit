@@ -246,7 +246,7 @@ class OtherPluginsCommand(
 
 class HelpCommand(
     private val context: Context
-) : ConsoleCommand { //TODO
+) : ConsoleCommand {
     @OptIn(ExperimentalStdlibApi::class)
     override suspend fun handle(name: String, args: String) = with(context) {
         if (args.isEmpty()) {
