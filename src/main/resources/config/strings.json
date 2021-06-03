@@ -27,6 +27,8 @@
   "show_command": "${event.name} command:<#list event.commands?keys as plugin>\n${plugin}/${event.name} <#if event.commands[plugin].usage?has_content>${event.commands[plugin].usage} </#if><#if event.commands[plugin].description?has_content>- ${event.commands[plugin].description}</#if></#list>",
   "show_usage": "Usage: ${event.usage}",
   "debug_mode": "Verbose errors <#if event.debug>enabled<#else>disabled</#if>",
+  "file_not_exists": "File '${path}' not exists",
+  "file_already_exists": "File '${path}' already exists",
   "commands": {
     "stop": {
       "usage": "",
@@ -55,6 +57,26 @@
     "debug": {
       "usage": "",
       "description": "Enables or disables verbose errors"
+    },
+    "settings": {
+      "usage": "read|write|new|remove <path> [...]",
+      "description": "Reads or writes plugin file"
+    },
+    "settings read": {
+      "usage": "<path>",
+      "description": "Reads plugin file"
+    },
+    "settings write": {
+      "usage": "<path> <new content>",
+      "description": "Writes plugin file"
+    },
+    "settings new": {
+      "usage": "<path> <new content>",
+      "description": "Creates plugin file"
+    },
+    "settings remove": {
+      "usage": "<path>",
+      "description": "Removes plugin file"
     }
   }
 }

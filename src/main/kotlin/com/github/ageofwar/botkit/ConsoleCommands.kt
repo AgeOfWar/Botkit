@@ -1,5 +1,8 @@
 package com.github.ageofwar.botkit
 
+import com.github.ageofwar.botkit.files.suspendDeleteExisting
+import com.github.ageofwar.botkit.files.suspendReadText
+import com.github.ageofwar.botkit.files.suspendWriteText
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ClosedSendChannelException
@@ -7,13 +10,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.net.MalformedURLException
 import java.net.URL
+import kotlin.io.path.exists
 
 typealias ConsoleCommands = MutableMap<String, ConsoleCommand>
 
 interface ConsoleCommand {
     suspend fun handle(name: String, args: String)
     
-    suspend fun Context.logUsage(name: String) = log(Usage(logger.strings.commands[name]?.usage))
+    suspend fun Context.logUsage(name: String) = log(Usage(name + " " + logger.strings.commands[name]?.usage))
 }
 
 suspend fun Context.listenCommands(unknownCommand: ConsoleCommand = OtherPluginsCommand(this)) {
@@ -50,7 +54,7 @@ suspend fun Context.sendCommands() {
 }
 
 private suspend fun Context.handleCommand(input: String, unknownCommand: ConsoleCommand) {
-    val parts = input.trim().split(Regex("\\s+"), limit = 2)
+    val parts = input.trim().split(Regex("(?<!\\\\)\\s+"), limit = 2)
     if (parts[0].isEmpty()) return
     log(CommandReceived(input))
     val name = parts[0]
@@ -155,6 +159,65 @@ class DebugCommand(private val context: Context) : ConsoleCommand {
     }
 }
 
+class FileCommand(private val context: Context) : ConsoleCommand {
+    override suspend fun handle(name: String, args: String) = with(context) {
+        val parts = args.split(Regex("(?<!\\\\)\\s+"), limit = 2)
+        val subName = "$name ${parts[0]}"
+        when (parts[0]) {
+            "read" -> with(Read()) { handle(subName, parts.getOrNull(1) ?: return logUsage(subName)) }
+            "write" -> with(Write()) { handle(subName, parts.getOrNull(1) ?: return logUsage(subName)) }
+            "new" -> with(New()) { handle(subName, parts.getOrNull(1) ?: return logUsage(subName)) }
+            "remove" -> with(Remove()) { handle(subName, parts.getOrNull(1) ?: return logUsage(subName)) }
+            else -> logUsage(name)
+        }
+    }
+    
+    inner class Read : ConsoleCommand {
+        override suspend fun handle(name: String, args: String) = with(context) {
+            val parts = args.split(Regex("(?<!\\\\)\\s+")).map { it.replace("\\ ", " ") }
+            if (parts.size != 1) return logUsage(name)
+            val file = pluginsDirectory.resolve(parts[0])
+            if (!file.exists()) return log(FileNotExists(file))
+            logger.log(file.suspendReadText(), "Botkit", "INFO")
+        }
+    }
+    
+    inner class Write : ConsoleCommand {
+        override suspend fun handle(name: String, args: String) = with(context) {
+            val parts = args.split(Regex("(?<!\\\\)\\s+"), limit = 2).map { it.replace("\\ ", " ") }
+            if (parts.size != 2) return logUsage(name)
+            val file = pluginsDirectory.resolve(parts[0])
+            val value = parts[1]
+            if (!file.exists()) return log(FileNotExists(file))
+            file.suspendWriteText(value)
+            logger.log("File updated", "Botkit", "INFO")
+        }
+    }
+    
+    inner class New : ConsoleCommand {
+        override suspend fun handle(name: String, args: String) = with(context) {
+            val parts = args.split(Regex("(?<!\\\\)\\s+"), limit = 2).map { it.replace("\\ ", " ") }
+            if (parts.size != 2) return logUsage(name)
+            val file = pluginsDirectory.resolve(parts[0])
+            val value = parts[1]
+            if (file.exists()) return log(FileAlreadyExists(file))
+            file.suspendWriteText(value)
+            logger.log("File created", "Botkit", "INFO")
+        }
+    }
+    
+    inner class Remove : ConsoleCommand {
+        override suspend fun handle(name: String, args: String) = with(context) {
+            val parts = args.split(Regex("(?<!\\\\)\\s+")).map { it.replace("\\ ", " ") }
+            if (parts.size != 1) return logUsage(name)
+            val file = pluginsDirectory.resolve(parts[0])
+            if (!file.exists()) return log(FileNotExists(file))
+            file.suspendDeleteExisting()
+            logger.log("File removed", "Botkit", "INFO")
+        }
+    }
+}
+
 class OtherPluginsCommand(
     private val context: Context,
     private val unknownCommand: ConsoleCommand = UnknownCommand(context.logger)
@@ -183,7 +246,7 @@ class OtherPluginsCommand(
 
 class HelpCommand(
     private val context: Context
-) : ConsoleCommand {
+) : ConsoleCommand { //TODO
     @OptIn(ExperimentalStdlibApi::class)
     override suspend fun handle(name: String, args: String) = with(context) {
         if (args.isEmpty()) {

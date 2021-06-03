@@ -33,6 +33,8 @@ data class Strings(
     @SerialName("show_commands") val showCommands: String?,
     @SerialName("show_usage") val showUsage: String?,
     @SerialName("debug_mode") val debugMode: String?,
+    @SerialName("file_not_exists") val fileNotExists: String?,
+    @SerialName("file_already_exists") val fileAlreadyExists: String?,
     val commands: Map<String, Command>
 ) {
     @Serializable

@@ -3,6 +3,7 @@ package com.github.ageofwar.botkit
 import com.github.ageofwar.botkit.files.PluginLoadException
 import com.github.ageofwar.ktelegram.DetailedBot
 import com.github.ageofwar.ktelegram.Update
+import java.nio.file.Path
 
 interface LoggerEvent {
     fun message(format: Strings): String?
@@ -132,4 +133,12 @@ data class ShowCommands(val commands: Map<String, Map<String, Strings.Command>>)
 
 data class DebugMode(val debug: Boolean) : LoggerEvent {
     override fun message(format: Strings) = format.debugMode
+}
+
+data class FileNotExists(val path: Path) : LoggerEvent {
+    override fun message(format: Strings) = format.fileNotExists
+}
+
+data class FileAlreadyExists(val path: Path) : LoggerEvent {
+    override fun message(format: Strings) = format.fileAlreadyExists
 }

@@ -24,6 +24,7 @@ suspend fun Path.suspendReadText() = withContext(Dispatchers.IO) { readText() }
 suspend fun Path.suspendWriteText(text: String) = withContext(Dispatchers.IO) { writeText(text) }
 suspend fun Path.suspendExists() = withContext(Dispatchers.IO) { exists() }
 suspend fun Path.suspendCreateDirectories() = withContext(Dispatchers.IO) { createDirectories() }
+suspend fun Path.suspendDeleteExisting() = withContext(Dispatchers.IO) { deleteExisting() }
 suspend fun Path.suspendOutputStream() = withContext(Dispatchers.IO) { outputStream() }
 suspend fun Path.suspendBufferedReader(charset: Charset, vararg options: OpenOption) = withContext(Dispatchers.IO) { bufferedReader(charset, options = options) }
 suspend fun Path.suspendBufferedWriter(charset: Charset, vararg options: OpenOption) = withContext(Dispatchers.IO) { bufferedWriter(charset, options = options) }
