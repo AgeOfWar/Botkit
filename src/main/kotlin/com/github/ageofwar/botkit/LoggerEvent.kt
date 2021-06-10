@@ -10,6 +10,7 @@ interface LoggerEvent {
     val category: String get() = "Botkit"
     val level: String get() = "INFO"
     val throwable: Throwable? get() = null
+    val verboseError: Boolean get() = true
 }
 
 data class BotStart(val bot: DetailedBot) : LoggerEvent {
@@ -22,7 +23,7 @@ data class BotStop(val bot: DetailedBot) : LoggerEvent {
 
 data class LongPollingError(override val throwable: Throwable) : LoggerEvent {
     override fun message(format: Strings) = format.longPollingError
-    override val level = "WARNING"
+    override val level = "ERROR"
 }
 
 data class OldUpdate(val update: Update) : LoggerEvent {
@@ -36,6 +37,7 @@ data class NewUpdate(val update: Update) : LoggerEvent {
 data class PluginLoadError(val plugin: String, override val throwable: PluginLoadException) : LoggerEvent {
     override fun message(format: Strings) = format.pluginLoadError
     override val level = "ERROR"
+    override val verboseError = false
 }
 
 data class PluginInitError(val plugin: String, override val throwable: Throwable) : LoggerEvent {

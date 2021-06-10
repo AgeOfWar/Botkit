@@ -22,7 +22,8 @@ class Loggers(
     val strings: Strings
 ) {
     suspend fun log(event: LoggerEvent) {
-        if (verboseErrors) {
+        if (event is LongPollingError && !verboseErrors) return
+        if (event.verboseError || verboseErrors) {
             log(event.message(strings)?.template("event" to event), event.category, event.level)
             log(event.throwable?.stackTraceToString(), event.category, event.level)
         } else {
