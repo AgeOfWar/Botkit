@@ -3,6 +3,8 @@ package com.github.ageofwar.botkit
 import com.github.ageofwar.botkit.files.suspendDeleteExisting
 import com.github.ageofwar.botkit.files.suspendReadText
 import com.github.ageofwar.botkit.files.suspendWriteText
+import com.github.ageofwar.botkit.plugin.Plugin
+import com.github.ageofwar.botkit.plugin.PluginCommand
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ClosedSendChannelException
@@ -96,14 +98,14 @@ class EnablePluginCommand(private val context: Context) : ConsoleCommand {
         }
         if (plugin != null) {
             log(PluginEnabled(plugin.name))
-            reloadCommands()
+            reloadBotCommands()
         }
     }
     
     private suspend fun handle(name: String): Unit = with(context) {
         val enabled = enablePlugins(getAvailablePlugins())
         log(PluginsEnabled(enabled.map { it.name }))
-        reloadCommands()
+        reloadBotCommands()
     }
 }
 
@@ -115,14 +117,14 @@ class DisablePluginCommand(private val context: Context) : ConsoleCommand {
         val plugin = disablePlugin(pluginName)
         if (plugin != null) {
             log(PluginDisabled(plugin.name))
-            reloadCommands()
+            reloadBotCommands()
         }
     }
     
     private suspend fun handle(name: String): Unit = with(context) {
         val disabled = context.disablePlugins(plugins.keys)
         log(PluginsDisabled(disabled.map { it.name }))
-        reloadCommands()
+        reloadBotCommands()
     }
 }
 
@@ -143,7 +145,7 @@ class ReloadPluginsCommand(private val context: Context) : ConsoleCommand {
                 log(PluginReloaded(plugin.name))
             }
         }
-        reloadCommands()
+        reloadBotCommands()
     }
     
     private suspend fun handle(name: String): Unit = with(context) {
@@ -225,12 +227,13 @@ class OtherPluginsCommand(
     override suspend fun handle(name: String, args: String): Unit = with(context) {
         val nameParts = name.split('/', limit = 2)
         if (nameParts.size == 1) {
-            val plugins = plugins.values.filter { it.consoleCommands.containsKey(name) }
+            val plugins = plugins.values.filter { it.commands.containsKey(name) }
             when (plugins.size) {
                 0 -> unknownCommand.handle(name, args)
                 1 -> {
                     val plugin = plugins[0]
-                    with(plugin.consoleCommands[name]!!) { plugin.handle(name, args) }
+                    @Suppress("UNCHECKED_CAST")
+                    with(plugin.commands[name] as PluginCommand<Plugin>) { plugin.handle(name, args) }
                 }
                 else -> log(Conflict(name, plugins.map { it.name }))
             }
@@ -238,8 +241,9 @@ class OtherPluginsCommand(
             val (pluginName, commandName) = nameParts
             if (pluginName == "Botkit") return commands[commandName]?.handle(name, args) ?: unknownCommand.handle(name, args)
             val plugin = plugins[pluginName] ?: return log(PluginNotEnabled(pluginName))
-            val command = plugin.consoleCommands[commandName] ?: return unknownCommand.handle(name, args)
-            with(command) { plugin.handle(name, args) }
+            val command = plugin.commands[commandName] ?: return unknownCommand.handle(name, args)
+            @Suppress("UNCHECKED_CAST")
+            with(command as PluginCommand<Plugin>) { plugin.handle(name, args) }
         }
     }
 }
@@ -253,7 +257,7 @@ class HelpCommand(
             val commands = buildMap<String, Map<String, Strings.Command>> {
                 put("Botkit", commands.mapValues { (name, _) -> logger.strings.commands[name] ?: Strings.Command() })
                 plugins.forEach { (name, plugin) ->
-                    put(name, plugin.consoleCommands.mapValues { (_, command) -> Strings.Command(command.usage, command.description) })
+                    put(name, plugin.commands.mapValues { (_, command) -> Strings.Command(command.usage, command.description) })
                 }
             }
             return log(ShowCommands(commands))
@@ -262,7 +266,7 @@ class HelpCommand(
             val botkitCommand = commands[args]
             if (botkitCommand != null) put("Botkit", logger.strings.commands[args] ?: Strings.Command())
             plugins.forEach { (name, plugin) ->
-                val pluginCommand = plugin.consoleCommands[args]
+                val pluginCommand = plugin.commands[args]
                 if (pluginCommand != null) put(name, Strings.Command(pluginCommand.usage, pluginCommand.description))
             }
         }

@@ -33,10 +33,10 @@ fun Context.addDefaultConsoleCommands() = commands.putAll(arrayOf(
 
 suspend fun Context.log(event: LoggerEvent) = logger.log(event)
 
-fun Context.reloadCommands() = scope.launch {
+fun Context.reloadBotCommands() = scope.launch {
     suspend fun TelegramApi.updateMyCommands(plugins: Plugins) {
         val commands = plugins.flatMap { (_, plugin) ->
-            plugin.commands.map { BotCommand(it.key, it.value) }
+            plugin.botCommands.map { BotCommand(it.key, it.value) }
         }
         setMyCommands(commands)
     }
@@ -50,7 +50,7 @@ fun Context.reloadCommands() = scope.launch {
     }
 }
 
-fun Context.pluginLog(plugin: Plugin, message: String?) = scope.launch {
+fun Context.pluginInfo(plugin: Plugin, message: String?) = scope.launch {
     logger.log(message, plugin.name, "INFO")
 }
 

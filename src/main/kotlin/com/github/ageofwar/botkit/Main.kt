@@ -33,7 +33,7 @@ fun main(vararg args: String) = runBlocking {
         addDefaultConsoleCommands()
         logger.use {
             loadPlugins()
-            reloadCommands()
+            reloadBotCommands()
             log(BotStart(bot))
             val job = launch { botkit(api, logger, botkit, plugins) }
             launch { sendCommands() }

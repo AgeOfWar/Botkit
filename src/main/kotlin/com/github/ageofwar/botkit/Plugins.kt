@@ -4,6 +4,7 @@ import com.github.ageofwar.botkit.files.*
 import com.github.ageofwar.botkit.plugin.Plugin
 import com.github.ageofwar.botkit.plugin.readException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import java.net.URL
@@ -95,7 +96,7 @@ fun Plugins.searchName(name: String): String? {
 
 suspend fun Plugin.init(context: Context): Boolean {
     return try {
-        registerCommands()
+        registerBotCommands()
         init()
         true
     } catch (e: Throwable) {
@@ -107,6 +108,7 @@ suspend fun Plugin.init(context: Context): Boolean {
 suspend fun Plugin.close(context: Context): Boolean {
     return try {
         close()
+        scope.cancel()
         true
     } catch (e: Throwable) {
         context.log(PluginCloseError(name, e))
@@ -116,7 +118,7 @@ suspend fun Plugin.close(context: Context): Boolean {
     }
 }
 
-suspend fun Plugin.registerCommands(fileName: String = "commands.txt") = withContext(Dispatchers.IO) {
+suspend fun Plugin.registerBotCommands(fileName: String = "commands.txt") = withContext(Dispatchers.IO) {
     try {
         val commandsFile = dataFolder.resolve(fileName)
         if (commandsFile.exists()) {
@@ -130,7 +132,7 @@ suspend fun Plugin.registerCommands(fileName: String = "commands.txt") = withCon
                     name to description
                 } else null
             }
-            commands.forEach { (name, description) -> registerCommand(name, description) }
+            commands.forEach { (name, description) -> registerBotCommand(name, description) }
         }
     } catch (e: Throwable) {
         readException(fileName, e)

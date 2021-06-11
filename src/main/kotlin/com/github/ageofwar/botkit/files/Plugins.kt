@@ -2,8 +2,7 @@ package com.github.ageofwar.botkit.files
 
 import com.github.ageofwar.botkit.Context
 import com.github.ageofwar.botkit.plugin.Plugin
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.io.InputStream
 import java.net.URL
 import java.net.URLClassLoader
@@ -13,7 +12,7 @@ import kotlin.io.path.isRegularFile
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
 
-val SUPPORTED_API_VERSIONS = arrayOf("1.0", "1.2", "1.3")
+val SUPPORTED_API_VERSIONS = arrayOf("2.0")
 
 suspend fun Context.loadPlugin(url: URL): Plugin = withContext(Dispatchers.IO) {
     val loader = try {
@@ -30,6 +29,8 @@ suspend fun Context.loadPlugin(url: URL): Plugin = withContext(Dispatchers.IO) {
         this.name = name
         this.url = url
         this.context = this@loadPlugin
+        this.scope = CoroutineScope(CoroutineName(name) + SupervisorJob())
+        this.dataFolder = pluginsDirectory.resolve(name)
     }
 }
 
