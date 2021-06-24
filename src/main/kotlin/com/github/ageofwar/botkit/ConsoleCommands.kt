@@ -3,8 +3,6 @@ package com.github.ageofwar.botkit
 import com.github.ageofwar.botkit.files.suspendDeleteExisting
 import com.github.ageofwar.botkit.files.suspendReadText
 import com.github.ageofwar.botkit.files.suspendWriteText
-import com.github.ageofwar.botkit.plugin.Plugin
-import com.github.ageofwar.botkit.plugin.PluginCommand
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ClosedSendChannelException
@@ -233,7 +231,7 @@ class OtherPluginsCommand(
                 1 -> {
                     val plugin = plugins[0]
                     @Suppress("UNCHECKED_CAST")
-                    with(plugin.commands[name] as PluginCommand<Plugin>) { plugin.handle(name, args) }
+                    with(plugin.commands[name]!!) { plugin.handle(name, args) }
                 }
                 else -> log(Conflict(name, plugins.map { it.name }))
             }
@@ -243,7 +241,7 @@ class OtherPluginsCommand(
             val plugin = plugins[pluginName] ?: return log(PluginNotEnabled(pluginName))
             val command = plugin.commands[commandName] ?: return unknownCommand.handle(name, args)
             @Suppress("UNCHECKED_CAST")
-            with(command as PluginCommand<Plugin>) { plugin.handle(name, args) }
+            with(command) { plugin.handle(name, args) }
         }
     }
 }

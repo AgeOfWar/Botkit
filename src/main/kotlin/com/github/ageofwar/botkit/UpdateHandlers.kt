@@ -1,7 +1,6 @@
 package com.github.ageofwar.botkit
 
 import com.github.ageofwar.botkit.plugin.Plugin
-import com.github.ageofwar.botkit.plugin.PluginUpdateHandler
 import com.github.ageofwar.ktelegram.ExceptionHandler
 import com.github.ageofwar.ktelegram.Update
 import com.github.ageofwar.ktelegram.UpdateHandler
@@ -40,7 +39,7 @@ class OldUpdatePluginsHandler(
                     launch(CoroutineName("update handler - $name")) {
                         try {
                             @Suppress("UNCHECKED_CAST")
-                            with(it as PluginUpdateHandler<Plugin>) { plugin.handle(update) }
+                            with(it) { plugin.handle(update) }
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Throwable) {
@@ -65,7 +64,7 @@ class NewUpdatePluginsHandler(
                     launch(CoroutineName("update handler - $name")) {
                         try {
                             @Suppress("UNCHECKED_CAST")
-                            with(it as PluginUpdateHandler<Plugin>) { plugin.handle(update) }
+                            with(it) { plugin.handle(update) }
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Throwable) {

@@ -24,24 +24,24 @@ abstract class Plugin {
     }
     
     internal lateinit var context: Context
-    internal val oldUpdateHandlers = CopyOnWriteArrayList<PluginUpdateHandler<*>>()
-    internal val updateHandlers = CopyOnWriteArrayList<PluginUpdateHandler<*>>()
+    internal val oldUpdateHandlers = CopyOnWriteArrayList<PluginUpdateHandler>()
+    internal val updateHandlers = CopyOnWriteArrayList<PluginUpdateHandler>()
     internal val botCommands = ConcurrentHashMap<String, String>()
-    internal val loggers = CopyOnWriteArrayList<PluginLogger<*>>()
-    internal val commands = ConcurrentHashMap<String, PluginCommand<*>>()
+    internal val loggers = CopyOnWriteArrayList<PluginLogger>()
+    internal val commands = ConcurrentHashMap<String, PluginCommand>()
     
     open suspend fun init() {}
     open suspend fun close() {}
     
-    fun registerOldUpdateHandler(handler: PluginUpdateHandler<*>) = oldUpdateHandlers.add(handler)
-    fun unregisterOldUpdateHandler(handler: PluginUpdateHandler<*>) = oldUpdateHandlers.remove(handler)
-    fun registerUpdateHandler(handler: PluginUpdateHandler<*>) = updateHandlers.add(handler)
-    fun unregisterUpdateHandler(handler: PluginUpdateHandler<*>) = updateHandlers.remove(handler)
+    fun registerOldUpdateHandler(handler: PluginUpdateHandler) = oldUpdateHandlers.add(handler)
+    fun unregisterOldUpdateHandler(handler: PluginUpdateHandler) = oldUpdateHandlers.remove(handler)
+    fun registerUpdateHandler(handler: PluginUpdateHandler) = updateHandlers.add(handler)
+    fun unregisterUpdateHandler(handler: PluginUpdateHandler) = updateHandlers.remove(handler)
     fun registerBotCommand(name: String, description: String) = botCommands.put(name, description)
     fun unregisterBotCommand(name: String) = botCommands.remove(name)
-    fun registerLogger(logger: PluginLogger<*>) = loggers.add(logger)
-    fun unregisterLogger(logger: PluginLogger<*>) = loggers.remove(logger)
-    fun registerCommand(name: String, handler: PluginCommand<*>) = commands.put(name, handler)
+    fun registerLogger(logger: PluginLogger) = loggers.add(logger)
+    fun unregisterLogger(logger: PluginLogger) = loggers.remove(logger)
+    fun registerCommand(name: String, handler: PluginCommand) = commands.put(name, handler)
     fun unregisterCommand(name: String) = commands.remove(name)
     
     fun reloadBotCommands() = context.reloadBotCommands()
@@ -63,12 +63,12 @@ abstract class Plugin {
     inline fun <reified T : Plugin, R> withPlugin(noinline block: T.() -> R): R = withPlugin(T::class, block)
 }
 
-fun interface PluginLogger<in T : Plugin> {
-    suspend fun T.log(message: String)
+fun interface PluginLogger {
+    suspend fun Plugin.log(message: String)
 }
 
-fun interface PluginCommand<in T : Plugin> {
-    suspend fun T.handle(name: String, args: String)
+fun interface PluginCommand {
+    suspend fun Plugin.handle(name: String, args: String)
     
     val usage: String? get() = null
     val description: String? get() = null
@@ -79,8 +79,8 @@ fun interface PluginCommand<in T : Plugin> {
     }
 }
 
-fun interface PluginUpdateHandler<in T : Plugin> {
-    suspend fun T.handle(update: Update)
+fun interface PluginUpdateHandler {
+    suspend fun Plugin.handle(update: Update)
 }
 
 class PluginException(val plugin: Plugin, message: String? = null, cause: Throwable? = null) : RuntimeException(message, cause)
@@ -88,10 +88,10 @@ class PluginNotFoundException(`class`: Class<*>) : Exception("Plugin $`class` no
 
 fun Plugin.exception(message: String? = null, cause: Throwable? = null): Nothing = throw PluginException(this, message, cause)
 
-fun Plugin.registerOldUpdateHandlers(vararg handlers: PluginUpdateHandler<*>) = handlers.forEach { registerOldUpdateHandler(it) }
-fun Plugin.unregisterOldUpdateHandlers(vararg handlers: PluginUpdateHandler<*>) = handlers.forEach { unregisterOldUpdateHandler(it) }
-fun Plugin.registerUpdateHandlers(vararg handlers: PluginUpdateHandler<*>) = handlers.forEach { registerUpdateHandler(it) }
-fun Plugin.unregisterUpdateHandlers(vararg handlers: PluginUpdateHandler<*>) = handlers.forEach { unregisterUpdateHandler(it) }
+fun Plugin.registerOldUpdateHandlers(vararg handlers: PluginUpdateHandler) = handlers.forEach { registerOldUpdateHandler(it) }
+fun Plugin.unregisterOldUpdateHandlers(vararg handlers: PluginUpdateHandler) = handlers.forEach { unregisterOldUpdateHandler(it) }
+fun Plugin.registerUpdateHandlers(vararg handlers: PluginUpdateHandler) = handlers.forEach { registerUpdateHandler(it) }
+fun Plugin.unregisterUpdateHandlers(vararg handlers: PluginUpdateHandler) = handlers.forEach { unregisterUpdateHandler(it) }
 
 fun Plugin.registerBotCommands(commands: Map<String, String>) = commands.forEach { (name, description) -> registerBotCommand(name, description) }
 fun Plugin.unregisterBotCommands(vararg commands: String) = commands.forEach { unregisterBotCommand(it) }
@@ -100,8 +100,8 @@ fun Plugin.registerAndReloadBotCommands(commands: Map<String, String>) {
     reloadBotCommands()
 }
 
-fun Plugin.registerLoggers(vararg loggers: PluginLogger<*>) = loggers.forEach { registerLogger(it) }
-fun Plugin.unregisterLoggers(vararg loggers: PluginLogger<*>) = loggers.forEach { unregisterLogger(it) }
+fun Plugin.registerLoggers(vararg loggers: PluginLogger) = loggers.forEach { registerLogger(it) }
+fun Plugin.unregisterLoggers(vararg loggers: PluginLogger) = loggers.forEach { unregisterLogger(it) }
 
-fun Plugin.registerCommands(commands: Map<String, PluginCommand<*>>) = commands.forEach { (name, handler) -> registerCommand(name, handler) }
+fun Plugin.registerCommands(commands: Map<String, PluginCommand>) = commands.forEach { (name, handler) -> registerCommand(name, handler) }
 fun Plugin.unregisterCommands(vararg names: String) = names.forEach { unregisterCommand(it) }

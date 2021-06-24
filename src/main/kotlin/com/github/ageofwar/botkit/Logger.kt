@@ -1,8 +1,6 @@
 package com.github.ageofwar.botkit
 
 import com.github.ageofwar.botkit.files.template
-import com.github.ageofwar.botkit.plugin.Plugin
-import com.github.ageofwar.botkit.plugin.PluginLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Contextual
@@ -83,9 +81,7 @@ class PluginsLogger(private val plugins: Plugins) : Logger() {
         plugins.forEach { (_, plugin) ->
             plugin.loggers.forEach {
                 @Suppress("UNCHECKED_CAST")
-                with(it as PluginLogger<Plugin>) {
-                    plugin.log(message)
-                }
+                with(it) { plugin.log(message) }
             }
         }
     }
