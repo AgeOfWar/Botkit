@@ -115,7 +115,7 @@ fun Random.localTimeBetween(start: LocalTime, end: LocalTime): LocalTime {
     val distance = when {
         end.isAfter(start) -> end.toNanoOfDay() - start.toNanoOfDay()
         start.isAfter(end) -> end.toNanoOfDay() - start.toNanoOfDay() + LocalTime.MAX.toNanoOfDay() + 1
-        else -> 0
+        else -> return start
     }
     return start.plusNanos(nextLong(distance))
 }
