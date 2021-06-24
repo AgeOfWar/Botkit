@@ -13,7 +13,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.AgeOfWar:Botkit:1.3'
+    implementation 'com.github.AgeOfWar:Botkit:2.0'
 }
 ```
 
@@ -54,8 +54,8 @@ class MyPlugin : Plugin() {
     }
 }
 
-class RepeatCommand(private val plugin: Plugin) : UpdateHandler {
-    override suspend fun handle(update: Update) = update.handleMessage { message ->
+class RepeatCommand(private val plugin: Plugin) : PluginUpdateHandler {
+    override suspend fun Plugin.handle(update: Update) = update.handleMessage { message ->
         val content = message.toMessageContent()
         if (content != null) {
             plugin.api.sendMessage(message.messageId, content)
@@ -68,11 +68,12 @@ Remember to add `botkit.properties` file in your resource source set:
 ```properties
 name=MyPlugin
 pluginClassName=com.example.myplugin.MyPlugin
-apiVersion=1.3
+apiVersion=2.0
 ```
 
 | Botkit version | apiVersion | supported apiVersion |
 |----------------|------------|----------------------|
+| 2.0            | 2.0        | 2.0                  |
 | 1.3            | 1.3        | 1.0, 1.2, 1.3        |
 | 1.2            | 1.2        | 1.0, 1.2             |
 | 1.1            | 1.0        | 1.0                  |
@@ -99,4 +100,4 @@ kick  - kicks an user
 help  - shows an help message
 hello - says hello
 ```
-Adding this file into plugin data folder will update your bot commands when the plugin is enabled
+Adding this file into plugin data folder will update your bot commands when the plugin is enabled.
