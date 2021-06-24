@@ -13,7 +13,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.AgeOfWar:Botkit:2.0'
+    implementation 'com.github.AgeOfWar:Botkit:2.1'
 }
 ```
 
@@ -68,11 +68,12 @@ Remember to add `botkit.properties` file in your resource source set:
 ```properties
 name=MyPlugin
 pluginClassName=com.example.myplugin.MyPlugin
-apiVersion=2.0
+apiVersion=2.1
 ```
 
 | Botkit version | apiVersion | supported apiVersion |
 |----------------|------------|----------------------|
+| 2.1            | 2.1        | 2.0, 2.1             |
 | 2.0            | 2.0        | 2.0                  |
 | 1.3            | 1.3        | 1.0, 1.2, 1.3        |
 | 1.2            | 1.2        | 1.0, 1.2             |
