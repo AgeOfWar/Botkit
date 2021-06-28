@@ -94,7 +94,7 @@ fun Plugins.searchName(name: String): String? {
 
 suspend fun Plugin.init(context: Context): Boolean {
     return try {
-        registerBotCommands("commands")
+        registerBotCommandsFromFile("commands")
         init()
         true
     } catch (e: Throwable) {
@@ -116,7 +116,7 @@ suspend fun Plugin.close(context: Context): Boolean {
     }
 }
 
-suspend fun Plugin.registerBotCommands(fileName: String) {
+suspend fun Plugin.registerBotCommandsFromFile(fileName: String) {
     val defaultCommandsFile = dataFolder.resolve("$fileName.json")
     if (defaultCommandsFile.exists()) {
         val defaultCommands = json.readFileAs<List<BotCommandWithScope>>(defaultCommandsFile) {
