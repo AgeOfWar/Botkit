@@ -1,7 +1,6 @@
 package com.github.ageofwar.botkit
 
 import com.github.ageofwar.botkit.plugin.Plugin
-import com.github.ageofwar.ktelegram.BotCommand
 import com.github.ageofwar.ktelegram.TelegramApi
 import com.github.ageofwar.ktelegram.setMyCommands
 import kotlinx.coroutines.CancellationException
@@ -35,10 +34,17 @@ suspend fun Context.log(event: LoggerEvent) = logger.log(event)
 
 fun Context.reloadBotCommands() = scope.launch {
     suspend fun TelegramApi.updateMyCommands(plugins: Plugins) {
-        val commands = plugins.flatMap { (_, plugin) ->
-            plugin.botCommands.map { BotCommand(it.key, it.value) }
+        val defaultCommandScopes = plugins.flatMap { (_, plugin) -> plugin.defaultBotCommands.keys }
+        defaultCommandScopes.forEach { scope ->
+            setMyCommands(scope, null, plugins.flatMap { (_, plugin) -> plugin.defaultBotCommands[scope] ?: emptyList()  })
         }
-        setMyCommands(commands)
+        val commandLanguages = plugins.flatMap { (_, plugin) -> plugin.botCommands.keys }
+        commandLanguages.forEach { languageCode ->
+            val commandScopes = plugins.flatMap { (_, plugin) -> plugin.botCommands[languageCode]?.keys ?: emptyList() }
+            commandScopes.forEach { scope ->
+                setMyCommands(scope, languageCode, plugins.flatMap { (_, plugin) -> plugin.botCommands[languageCode]?.get(scope) ?: emptyList()  })
+            }
+        }
     }
     
     try {

@@ -20,16 +20,17 @@ import java.nio.file.Path
 import kotlin.io.path.*
 import kotlin.reflect.typeOf
 
-suspend fun Path.suspendReadText() = withContext(Dispatchers.IO) { readText() }
-suspend fun Path.suspendWriteText(text: String) = withContext(Dispatchers.IO) { writeText(text) }
-suspend fun Path.suspendExists() = withContext(Dispatchers.IO) { exists() }
-suspend fun Path.suspendCreateDirectories() = withContext(Dispatchers.IO) { createDirectories() }
-suspend fun Path.suspendDeleteExisting() = withContext(Dispatchers.IO) { deleteExisting() }
-suspend fun Path.suspendOutputStream() = withContext(Dispatchers.IO) { outputStream() }
-suspend fun Path.suspendBufferedReader(charset: Charset, vararg options: OpenOption) = withContext(Dispatchers.IO) { bufferedReader(charset, options = options) }
-suspend fun Path.suspendBufferedWriter(charset: Charset, vararg options: OpenOption) = withContext(Dispatchers.IO) { bufferedWriter(charset, options = options) }
-suspend fun InputStream.suspendCopyTo(out: OutputStream) = withContext(Dispatchers.IO) { copyTo(out) }
-suspend fun ClassLoader.suspendGetResourceAsStream(name: String): InputStream? = withContext(Dispatchers.IO) { getResourceAsStream(name) }
+suspend inline fun Path.suspendReadText() = withContext(Dispatchers.IO) { readText() }
+suspend inline fun Path.suspendWriteText(text: String) = withContext(Dispatchers.IO) { writeText(text) }
+suspend inline fun Path.suspendExists() = withContext(Dispatchers.IO) { exists() }
+suspend inline fun Path.suspendCreateDirectories() = withContext(Dispatchers.IO) { createDirectories() }
+suspend inline fun Path.suspendDeleteExisting() = withContext(Dispatchers.IO) { deleteExisting() }
+suspend inline fun Path.suspendListDirectoryEntries(glob: String = "*") = withContext(Dispatchers.IO) { listDirectoryEntries(glob) }
+suspend inline fun Path.suspendOutputStream() = withContext(Dispatchers.IO) { outputStream() }
+suspend inline fun Path.suspendBufferedReader(charset: Charset, vararg options: OpenOption) = withContext(Dispatchers.IO) { bufferedReader(charset, options = options) }
+suspend inline fun Path.suspendBufferedWriter(charset: Charset, vararg options: OpenOption) = withContext(Dispatchers.IO) { bufferedWriter(charset, options = options) }
+suspend inline fun InputStream.suspendCopyTo(out: OutputStream) = withContext(Dispatchers.IO) { copyTo(out) }
+suspend inline fun ClassLoader.suspendGetResourceAsStream(name: String): InputStream? = withContext(Dispatchers.IO) { getResourceAsStream(name) }
 
 suspend inline fun <reified T> Json.readFileAs(file: Path, crossinline exceptionHandler: (Throwable) -> T): T {
     val text = try {

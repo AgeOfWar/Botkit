@@ -2,16 +2,14 @@ package com.github.ageofwar.botkit
 
 import com.github.ageofwar.botkit.files.*
 import com.github.ageofwar.botkit.plugin.Plugin
-import com.github.ageofwar.botkit.plugin.readException
-import kotlinx.coroutines.Dispatchers
+import com.github.ageofwar.ktelegram.BotCommand
+import com.github.ageofwar.ktelegram.BotCommandScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.SerializationException
+import kotlinx.serialization.Serializable
 import java.net.URL
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.name
-import kotlin.io.path.readLines
 
 typealias Plugins = MutableMap<String, Plugin>
 
@@ -96,7 +94,7 @@ fun Plugins.searchName(name: String): String? {
 
 suspend fun Plugin.init(context: Context): Boolean {
     return try {
-        registerBotCommands()
+        registerBotCommands("commands")
         init()
         true
     } catch (e: Throwable) {
@@ -118,23 +116,24 @@ suspend fun Plugin.close(context: Context): Boolean {
     }
 }
 
-suspend fun Plugin.registerBotCommands(fileName: String = "commands.txt") = withContext(Dispatchers.IO) {
-    try {
-        val commandsFile = dataFolder.resolve(fileName)
-        if (commandsFile.exists()) {
-            val commands = commandsFile.readLines().mapNotNull {
-                val line = it.trim()
-                if (line.isNotEmpty()) {
-                    val parts = it.split(Regex("\\s*-\\s*"), limit = 2)
-                    if (parts.size != 2) throw SerializationException("Invalid file format for '$fileName', missing - separator")
-                    val (name, description) = parts
-                    if (!name.all { c -> c.isJavaIdentifierPart() }) throw SerializationException("Invalid file format for '$fileName', invalid command name '$name'")
-                    name to description
-                } else null
-            }
-            commands.forEach { (name, description) -> registerBotCommand(name, description) }
+suspend fun Plugin.registerBotCommands(fileName: String) {
+    val defaultCommandsFile = dataFolder.resolve("$fileName.json")
+    if (defaultCommandsFile.exists()) {
+        val defaultCommands = json.readFileAs<List<BotCommandWithScope>>(defaultCommandsFile) {
+            error("An error occurred while deserializing bot commands", it)
+            emptyList()
         }
-    } catch (e: Throwable) {
-        readException(fileName, e)
+        defaultCommands.forEach { (scope, commands) -> registerBotCommands(scope, *commands.toTypedArray()) }
+    }
+    dataFolder.suspendListDirectoryEntries("$fileName-??.json").forEach { path ->
+        val languageCode = path.name.substring(fileName.length + 1, fileName.length + 3)
+        val commands = json.readFileAs<List<BotCommandWithScope>>(defaultCommandsFile) {
+            error("An error occurred while deserializing bot commands", it)
+            emptyList()
+        }
+        commands.forEach { (scope, commands) -> registerBotCommands(languageCode, scope, *commands.toTypedArray()) }
     }
 }
+
+@Serializable
+private data class BotCommandWithScope(val scope: BotCommandScope, val commands: List<BotCommand>)

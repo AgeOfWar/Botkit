@@ -1,6 +1,8 @@
 package com.github.ageofwar.botkit.plugin
 
 import com.github.ageofwar.botkit.*
+import com.github.ageofwar.ktelegram.BotCommand
+import com.github.ageofwar.ktelegram.BotCommandScope
 import com.github.ageofwar.ktelegram.Update
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
@@ -26,27 +28,40 @@ abstract class Plugin {
     internal lateinit var context: Context
     internal val oldUpdateHandlers = CopyOnWriteArrayList<PluginUpdateHandler>()
     internal val updateHandlers = CopyOnWriteArrayList<PluginUpdateHandler>()
-    internal val botCommands = ConcurrentHashMap<String, String>()
+    internal val defaultBotCommands = ConcurrentHashMap<BotCommandScope, MutableList<BotCommand>>()
+    internal val botCommands = ConcurrentHashMap<String, MutableMap<BotCommandScope, MutableList<BotCommand>>>()
     internal val loggers = CopyOnWriteArrayList<PluginLogger>()
     internal val commands = ConcurrentHashMap<String, PluginCommand>()
     
     open suspend fun init() {}
     open suspend fun close() {}
     
-    fun registerOldUpdateHandler(handler: PluginUpdateHandler) = oldUpdateHandlers.add(handler)
+    fun registerOldUpdateHandler(handler: PluginUpdateHandler) { oldUpdateHandlers.add(handler) }
     fun unregisterOldUpdateHandler(handler: PluginUpdateHandler) = oldUpdateHandlers.remove(handler)
-    fun registerUpdateHandler(handler: PluginUpdateHandler) = updateHandlers.add(handler)
+    fun registerUpdateHandler(handler: PluginUpdateHandler) { updateHandlers.add(handler) }
     fun unregisterUpdateHandler(handler: PluginUpdateHandler) = updateHandlers.remove(handler)
-    fun registerBotCommand(name: String, description: String) = botCommands.put(name, description)
-    fun unregisterBotCommand(name: String) = botCommands.remove(name)
-    fun registerLogger(logger: PluginLogger) = loggers.add(logger)
+    fun registerLogger(logger: PluginLogger) { loggers.add(logger) }
     fun unregisterLogger(logger: PluginLogger) = loggers.remove(logger)
     fun registerCommand(name: String, handler: PluginCommand) = commands.put(name, handler)
     fun unregisterCommand(name: String) = commands.remove(name)
+    fun registerBotCommands(scope: BotCommandScope = BotCommandScope.Default, vararg commands: BotCommand) {
+        if (commands.isEmpty()) return
+        if (!defaultBotCommands.containsKey(scope)) defaultBotCommands[scope] = mutableListOf()
+        defaultBotCommands[scope]?.addAll(commands)
+    }
+    fun registerBotCommands(languageCode: String, scope: BotCommandScope = BotCommandScope.Default, vararg commands: BotCommand) {
+        if (commands.isEmpty()) return
+        if (!botCommands.containsKey(languageCode)) botCommands[languageCode] = mutableMapOf()
+        if (!botCommands[languageCode]!!.containsKey(scope)) botCommands[languageCode]!![scope] = mutableListOf()
+        botCommands[languageCode]!![scope]?.addAll(commands)
+    }
+    fun unregisterBotCommands(scope: BotCommandScope = BotCommandScope.Default) = defaultBotCommands.remove(scope)
+    fun unregisterBotCommands(languageCode: String, scope: BotCommandScope = BotCommandScope.Default) = botCommands[languageCode]?.remove(scope) ?: false
+    fun unregisterBotCommands(languageCode: String) = botCommands.remove(languageCode)
     
     fun reloadBotCommands() = context.reloadBotCommands()
     
-    suspend fun dispatchConsoleCommand(input: String) {
+    suspend fun dispatchCommand(input: String) {
         context.consoleCommandChannel.send(input)
     }
     
@@ -73,9 +88,11 @@ fun interface PluginCommand {
     val usage: String? get() = null
     val description: String? get() = null
     
-    fun Plugin.logUsage(name: String) {
-        val usage = usage ?: return info("Incorrect usage")
-        info("Usage: $name $usage")
+    fun Plugin.output(message: String) = info(message)
+    
+    fun Plugin.outputUsage(name: String) {
+        val usage = usage ?: return output("Incorrect usage")
+        output("Usage: $name $usage")
     }
 }
 
@@ -92,13 +109,6 @@ fun Plugin.registerOldUpdateHandlers(vararg handlers: PluginUpdateHandler) = han
 fun Plugin.unregisterOldUpdateHandlers(vararg handlers: PluginUpdateHandler) = handlers.forEach { unregisterOldUpdateHandler(it) }
 fun Plugin.registerUpdateHandlers(vararg handlers: PluginUpdateHandler) = handlers.forEach { registerUpdateHandler(it) }
 fun Plugin.unregisterUpdateHandlers(vararg handlers: PluginUpdateHandler) = handlers.forEach { unregisterUpdateHandler(it) }
-
-fun Plugin.registerBotCommands(commands: Map<String, String>) = commands.forEach { (name, description) -> registerBotCommand(name, description) }
-fun Plugin.unregisterBotCommands(vararg commands: String) = commands.forEach { unregisterBotCommand(it) }
-fun Plugin.registerAndReloadBotCommands(commands: Map<String, String>) {
-    commands.forEach { (name, description) -> registerBotCommand(name, description) }
-    reloadBotCommands()
-}
 
 fun Plugin.registerLoggers(vararg loggers: PluginLogger) = loggers.forEach { registerLogger(it) }
 fun Plugin.unregisterLoggers(vararg loggers: PluginLogger) = loggers.forEach { unregisterLogger(it) }
