@@ -136,4 +136,4 @@ suspend fun Plugin.registerBotCommandsFromFile(fileName: String) {
 }
 
 @Serializable
-private data class BotCommandWithScope(val scope: BotCommandScope, val commands: List<BotCommand>)
+private data class BotCommandWithScope(val scope: BotCommandScope = BotCommandScope.Default, val commands: List<BotCommand> = emptyList())
