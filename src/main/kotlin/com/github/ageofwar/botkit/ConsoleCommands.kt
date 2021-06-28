@@ -120,7 +120,7 @@ class DisablePluginCommand(private val context: Context) : ConsoleCommand {
     }
     
     private suspend fun handle(name: String): Unit = with(context) {
-        val disabled = context.disablePlugins(plugins.keys)
+        val disabled = context.disablePlugins(plugins.keys.toSet())
         log(PluginsDisabled(disabled.map { it.name }))
         reloadBotCommands()
     }
@@ -128,7 +128,7 @@ class DisablePluginCommand(private val context: Context) : ConsoleCommand {
 
 class PluginsCommand(private val context: Context) : ConsoleCommand {
     override suspend fun handle(name: String, args: String) = with(context) {
-        log(ShowPlugins(plugins.keys, getAvailablePluginsNames()))
+        log(ShowPlugins(plugins.keys.toSet(), getAvailablePluginsNames()))
     }
 }
 
@@ -147,7 +147,7 @@ class ReloadPluginsCommand(private val context: Context) : ConsoleCommand {
     }
     
     private suspend fun handle(name: String): Unit = with(context) {
-        val reloadedPlugins = reloadPlugins(plugins.keys)
+        val reloadedPlugins = reloadPlugins(plugins.keys.toSet())
         log(PluginsReloaded(reloadedPlugins.map { it.name }))
     }
 }

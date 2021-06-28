@@ -8,7 +8,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.serialization.Serializable
 import java.net.URL
 import java.nio.file.Path
-import kotlin.io.path.exists
 import kotlin.io.path.name
 
 typealias Plugins = MutableMap<String, Plugin>
@@ -117,8 +116,9 @@ suspend fun Plugin.close(context: Context): Boolean {
 }
 
 suspend fun Plugin.registerBotCommandsFromFile(fileName: String) {
+    if (!dataFolder.suspendExists()) return
     val defaultCommandsFile = dataFolder.resolve("$fileName.json")
-    if (defaultCommandsFile.exists()) {
+    if (defaultCommandsFile.suspendExists()) {
         val defaultCommands = json.readFileAs<List<BotCommandWithScope>>(defaultCommandsFile) {
             error("An error occurred while deserializing bot commands", it)
             emptyList()

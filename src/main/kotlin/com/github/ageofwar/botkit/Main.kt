@@ -40,7 +40,7 @@ fun main(vararg args: String) = runBlocking {
             listenCommands()
             log(BotStop(bot))
             job.cancelAndJoin()
-            disablePlugins(plugins.keys)
+            disablePlugins(plugins.keys.toSet())
         }
     }
 }
@@ -48,7 +48,7 @@ fun main(vararg args: String) = runBlocking {
 private suspend fun Context.loadPlugins() {
     println("Loading plugins...")
     enablePlugins(getAvailablePlugins())
-    log(PluginsEnabled(plugins.keys))
+    log(PluginsEnabled(plugins.keys.toSet()))
 }
 
 private suspend fun loadLogger(plugins: Plugins, json: Json): Loggers {
