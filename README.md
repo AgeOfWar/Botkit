@@ -13,7 +13,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.AgeOfWar:Botkit:2.1'
+    implementation 'com.github.AgeOfWar:Botkit:2.2'
 }
 ```
 
@@ -58,7 +58,7 @@ class RepeatCommand(private val plugin: Plugin) : PluginUpdateHandler {
     override suspend fun Plugin.handle(update: Update) = update.handleMessage { message ->
         val content = message.toMessageContent()
         if (content != null) {
-            plugin.api.sendMessage(message.messageId, content)
+            api.sendMessage(message.messageId, content)
         }
     }
 }
@@ -68,11 +68,12 @@ Remember to add `botkit.properties` file in your resource source set:
 ```properties
 name=MyPlugin
 pluginClassName=com.example.myplugin.MyPlugin
-apiVersion=2.1
+apiVersion=2.2
 ```
 
 | Botkit version | apiVersion | supported apiVersion |
 |----------------|------------|----------------------|
+| 2.2            | 2.2        | 2.2                  |
 | 2.1            | 2.1        | 2.0, 2.1             |
 | 2.0            | 2.0        | 2.0                  |
 | 1.3            | 1.3        | 1.0, 1.2, 1.3        |
@@ -95,10 +96,17 @@ apiVersion=2.1
 | `Plugin.readJsonFileAs(...) / Plugin.writeFile(...)                              ` | utility methods for json data reading/writing                                         |
 | `String.template(vararg Pair<String, Any?>): String                              ` | formats a string, see [Freemarker](https://freemarker.apache.org/docs/index.html)     |
 
-## commands.txt
-```text
-kick  - kicks an user
-help  - shows an help message
-hello - says hello
+## commands.json
+```json
+[
+  {
+    "scope": {"type":  "default"},
+    "commands": [
+      {"command":  "kick", "description": "Kicks an user"},
+      {"command":  "help", "description": "Shows an help message"},
+      {"command":  "hello", "description": "Says hello"}
+    ]
+  }
+]
 ```
 Adding this file into plugin data folder will update your bot commands when the plugin is enabled.
