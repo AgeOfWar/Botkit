@@ -127,7 +127,7 @@ suspend fun Plugin.registerBotCommandsFromFile(fileName: String) {
     }
     dataFolder.suspendListDirectoryEntries("$fileName-??.json").forEach { path ->
         val languageCode = path.name.substring(fileName.length + 1, fileName.length + 3)
-        val commands = json.readFileAs<List<BotCommandWithScope>>(defaultCommandsFile) {
+        val commands = json.readFileAs<List<BotCommandWithScope>>(path) {
             error("An error occurred while deserializing bot commands", it)
             emptyList()
         }
