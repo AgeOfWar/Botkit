@@ -88,11 +88,9 @@ fun interface PluginCommand {
     val usage: String? get() = null
     val description: String? get() = null
     
-    fun Plugin.output(message: String) = info(message)
-    
-    fun Plugin.outputUsage(name: String) {
-        val usage = usage ?: return output("Incorrect usage")
-        output("Usage: $name $usage")
+    fun Plugin.logUsage(name: String) {
+        val usage = usage ?: return info("Incorrect usage")
+        info("Usage: $name $usage")
     }
 }
 
