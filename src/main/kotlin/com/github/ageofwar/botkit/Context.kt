@@ -33,26 +33,26 @@ fun Context.addDefaultConsoleCommands() = commands.putAll(arrayOf(
 suspend fun Context.log(event: LoggerEvent) = logger.log(event)
 
 fun Context.reloadBotCommands() = scope.launch {
-    suspend fun TelegramApi.updateMyCommands(plugins: Plugins) {
-        val defaultCommandScopes = plugins.flatMap { (_, plugin) -> plugin.defaultBotCommands.keys }
-        defaultCommandScopes.forEach { scope ->
-            setMyCommands(scope, null, plugins.flatMap { (_, plugin) -> plugin.defaultBotCommands[scope] ?: emptyList()  })
-        }
-        val commandLanguages = plugins.flatMap { (_, plugin) -> plugin.botCommands.keys }
-        commandLanguages.forEach { languageCode ->
-            val commandScopes = plugins.flatMap { (_, plugin) -> plugin.botCommands[languageCode]?.keys ?: emptyList() }
-            commandScopes.forEach { scope ->
-                setMyCommands(scope, languageCode, plugins.flatMap { (_, plugin) -> plugin.botCommands[languageCode]?.get(scope) ?: emptyList()  })
-            }
-        }
-    }
-    
     try {
         api.updateMyCommands(plugins)
     } catch (e: CancellationException) {
         throw e
     } catch (e: Throwable) {
         logger.log(CommandReloadError(e))
+    }
+}
+
+private suspend fun TelegramApi.updateMyCommands(plugins: Plugins) {
+    val defaultCommandScopes = plugins.flatMap { (_, plugin) -> plugin.defaultBotCommands.keys }
+    defaultCommandScopes.forEach { scope ->
+        setMyCommands(scope, null, plugins.flatMap { (_, plugin) -> plugin.defaultBotCommands[scope] ?: emptyList()  })
+    }
+    val commandLanguages = plugins.flatMap { (_, plugin) -> plugin.botCommands.keys }
+    commandLanguages.forEach { languageCode ->
+        val commandScopes = plugins.flatMap { (_, plugin) -> plugin.botCommands[languageCode]?.keys ?: emptyList() }
+        commandScopes.forEach { scope ->
+            setMyCommands(scope, languageCode, plugins.flatMap { (_, plugin) -> plugin.botCommands[languageCode]?.get(scope) ?: emptyList()  })
+        }
     }
 }
 
