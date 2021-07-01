@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.github.ageofwar"
-version = "2.2"
+version = "2.3"
 
 application {
     mainClass.set("com.github.ageofwar.botkit.MainKt")

@@ -98,10 +98,10 @@ fun interface PluginUpdateHandler {
     suspend fun Plugin.handle(update: Update)
 }
 
-class PluginException(val plugin: Plugin, message: String? = null, cause: Throwable? = null) : RuntimeException(message, cause)
+class PluginException(message: String? = null, cause: Throwable? = null) : RuntimeException(message, cause)
 class PluginNotFoundException(`class`: Class<*>) : Exception("Plugin $`class` not found")
 
-fun Plugin.exception(message: String? = null, cause: Throwable? = null): Nothing = throw PluginException(this, message, cause)
+fun exception(message: String? = null, cause: Throwable? = null): Nothing = throw PluginException(message, cause)
 
 fun Plugin.registerOldUpdateHandlers(vararg handlers: PluginUpdateHandler) = handlers.forEach { registerOldUpdateHandler(it) }
 fun Plugin.unregisterOldUpdateHandlers(vararg handlers: PluginUpdateHandler) = handlers.forEach { unregisterOldUpdateHandler(it) }
