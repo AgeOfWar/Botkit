@@ -1,17 +1,14 @@
 package com.github.ageofwar.botkit.plugin
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.time.*
 import java.time.temporal.ChronoUnit
 import java.time.temporal.Temporal
 import kotlin.random.Random
 
-suspend inline fun delayUntil(temporal: Temporal) = delay(LocalDateTime.now().until(temporal, ChronoUnit.MILLIS))
+suspend fun delayUntil(temporal: Temporal) = delay(LocalDateTime.now().until(temporal, ChronoUnit.MILLIS))
 
-suspend inline fun delayUntil(time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault()) {
+suspend fun delayUntil(time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault()) {
     val now = ZonedDateTime.now(zoneId)
     val candidateScheduledTime = now.with(time)
     val scheduledTime = if (candidateScheduledTime.isAfter(now)) candidateScheduledTime else {
@@ -20,7 +17,7 @@ suspend inline fun delayUntil(time: LocalTime, zoneId: ZoneId = ZoneId.systemDef
     delayUntil(scheduledTime)
 }
 
-suspend inline fun delayUntil(dayOfWeek: DayOfWeek, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault()) {
+suspend fun delayUntil(dayOfWeek: DayOfWeek, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault()) {
     val now = ZonedDateTime.now(zoneId)
     val candidateScheduledTime = now.with(time)
     val days = when {
@@ -33,7 +30,7 @@ suspend inline fun delayUntil(dayOfWeek: DayOfWeek, time: LocalTime, zoneId: Zon
     delayUntil(scheduledTime)
 }
 
-suspend inline fun delayUntil(dayOfMonth: Int, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault()) {
+suspend fun delayUntil(dayOfMonth: Int, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault()) {
     val now = ZonedDateTime.now(zoneId)
     val candidateScheduledTime = now.withDayOfMonth(dayOfMonth).with(time)
     val scheduledTime = if (candidateScheduledTime.isAfter(now)) candidateScheduledTime else {
@@ -42,7 +39,7 @@ suspend inline fun delayUntil(dayOfMonth: Int, time: LocalTime, zoneId: ZoneId =
     delayUntil(scheduledTime)
 }
 
-suspend inline fun delayUntil(dayOfYear: MonthDay, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault()) {
+suspend fun delayUntil(dayOfYear: MonthDay, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault()) {
     val now = ZonedDateTime.now(zoneId)
     val candidateScheduledTime = now.with(dayOfYear).with(time)
     val scheduledTime = if (candidateScheduledTime.isAfter(now)) candidateScheduledTime else {
@@ -51,63 +48,68 @@ suspend inline fun delayUntil(dayOfYear: MonthDay, time: LocalTime, zoneId: Zone
     delayUntil(scheduledTime)
 }
 
-inline fun CoroutineScope.scheduleAt(temporal: Temporal, crossinline block: suspend () -> Unit) = launch {
+fun CoroutineScope.scheduleAt(temporal: Temporal, block: suspend () -> Unit) = launch {
     delayUntil(temporal)
     block()
 }
 
-inline fun CoroutineScope.scheduleAt(time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), crossinline block: suspend () -> Unit) = launch {
+fun CoroutineScope.scheduleAt(time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), block: suspend () -> Unit) = launch {
     delayUntil(time, zoneId)
     block()
 }
 
-inline fun CoroutineScope.scheduleEveryDayAt(time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), crossinline block: suspend () -> Unit) = launch {
+fun CoroutineScope.scheduleEveryDayAt(time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), block: suspend () -> Unit) = launch {
     while (isActive) {
         delayUntil(time, zoneId)
         block()
     }
 }
 
-inline fun CoroutineScope.scheduleAt(dayOfWeek: DayOfWeek, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), crossinline block: suspend () -> Unit) = launch {
+fun CoroutineScope.scheduleAt(dayOfWeek: DayOfWeek, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), block: suspend () -> Unit) = launch {
     delayUntil(dayOfWeek, time, zoneId)
     block()
 }
 
-inline fun CoroutineScope.scheduleEveryWeekAt(dayOfWeek: DayOfWeek, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), crossinline block: suspend () -> Unit) = launch {
+fun CoroutineScope.scheduleEveryWeekAt(dayOfWeek: DayOfWeek, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), block: suspend () -> Unit) = launch {
     while (isActive) {
         delayUntil(dayOfWeek, time, zoneId)
         block()
     }
 }
 
-inline fun CoroutineScope.scheduleAt(dayOfMonth: Int, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), crossinline block: suspend () -> Unit) = launch {
+fun CoroutineScope.scheduleAt(dayOfMonth: Int, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), block: suspend () -> Unit) = launch {
     delayUntil(dayOfMonth, time, zoneId)
     block()
 }
 
-inline fun CoroutineScope.scheduleEveryMonthAt(dayOfMonth: Int, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), crossinline block: suspend () -> Unit) = launch {
+fun CoroutineScope.scheduleEveryMonthAt(dayOfMonth: Int, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), block: suspend () -> Unit) = launch {
     while (isActive) {
         delayUntil(dayOfMonth, time, zoneId)
         block()
     }
 }
 
-inline fun CoroutineScope.scheduleAt(dayOfYear: MonthDay, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), crossinline block: suspend () -> Unit) = launch {
+fun CoroutineScope.scheduleAt(dayOfYear: MonthDay, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), block: suspend () -> Unit) = launch {
     delayUntil(dayOfYear, time, zoneId)
     block()
 }
 
-inline fun CoroutineScope.scheduleEveryYearAt(dayOfYear: MonthDay, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), crossinline block: suspend () -> Unit) = launch {
+fun CoroutineScope.scheduleEveryYearAt(dayOfYear: MonthDay, time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), block: suspend () -> Unit) = launch {
     while (isActive) {
         delayUntil(dayOfYear, time, zoneId)
         block()
     }
 }
 
-inline fun CoroutineScope.scheduleEveryDayBetween(startTime: LocalTime, endTime: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), random: Random = Random, crossinline block: suspend () -> Unit) = launch {
-    while (isActive) {
-        delayUntil(random.localTimeBetween(startTime, endTime), zoneId)
-        block()
+fun CoroutineScope.scheduleEveryDayBetween(startTime: LocalTime, endTime: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), random: Random = Random, block: suspend () -> Unit) = launch {
+    try {
+        while (isActive) {
+            delayUntil(random.localTimeBetween(startTime, endTime), zoneId)
+            block()
+        }
+    } catch (e: CancellationException) {
+        println("CANCELLATO")
+        throw e
     }
 }
 
