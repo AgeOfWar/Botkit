@@ -52,6 +52,12 @@ data class PluginUpdateError(val plugin: String, override val throwable: Throwab
     override val level = "ERROR"
 }
 
+data class PluginCoroutineError(val plugin: String, override val throwable: Throwable) : LoggerEvent {
+    override fun message(format: Strings) = format.pluginCoroutineError
+    override val category = plugin
+    override val level = "ERROR"
+}
+
 data class PluginCloseError(val plugin: String, override val throwable: Throwable) : LoggerEvent {
     override fun message(format: Strings) = format.pluginCloseError
     override val category = plugin

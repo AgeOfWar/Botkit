@@ -110,11 +110,7 @@ suspend fun Plugin.close(context: Context): Boolean {
         context.log(PluginCloseError(name, e))
         false
     } finally {
-        try {
-            scope.cancel()
-        } catch (e: Throwable) {
-            context.log(PluginCloseError(name, e))
-        }
+        scope.cancel()
         (javaClass.classLoader as? AutoCloseable)?.close()
     }
 }

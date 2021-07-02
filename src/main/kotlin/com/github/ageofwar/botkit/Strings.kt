@@ -13,6 +13,7 @@ data class Strings(
     @SerialName("plugin_load_error") val pluginLoadError: String?,
     @SerialName("plugin_init_error") val pluginInitError: String?,
     @SerialName("plugin_update_error") val pluginUpdateError: String?,
+    @SerialName("plugin_coroutine_error") val pluginCoroutineError: String?,
     @SerialName("plugin_close_error") val pluginCloseError: String?,
     @SerialName("plugin_already_enabled") val pluginAlreadyEnabled: String?,
     @SerialName("plugin_not_enabled") val pluginNotEnabled: String?,

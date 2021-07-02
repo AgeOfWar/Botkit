@@ -1,6 +1,8 @@
 package com.github.ageofwar.botkit.files
 
 import com.github.ageofwar.botkit.Context
+import com.github.ageofwar.botkit.PluginCoroutineError
+import com.github.ageofwar.botkit.log
 import com.github.ageofwar.botkit.plugin.Plugin
 import kotlinx.coroutines.*
 import java.io.InputStream
@@ -29,8 +31,13 @@ suspend fun Context.loadPlugin(url: URL): Plugin = withContext(Dispatchers.IO) {
         this.name = name
         this.url = url
         this.context = this@loadPlugin
-        this.scope = CoroutineScope(CoroutineName(name) + SupervisorJob())
         this.dataFolder = pluginsDirectory.resolve(name)
+        val exceptionHandler = CoroutineExceptionHandler { _, t ->
+            this@loadPlugin.scope.launch {
+                this@loadPlugin.log(PluginCoroutineError(name, t))
+            }
+        }
+        this.scope = CoroutineScope(CoroutineName(name) + SupervisorJob() + exceptionHandler)
     }
 }
 
