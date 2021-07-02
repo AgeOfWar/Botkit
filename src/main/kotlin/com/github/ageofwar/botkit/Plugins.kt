@@ -105,12 +105,16 @@ suspend fun Plugin.init(context: Context): Boolean {
 suspend fun Plugin.close(context: Context): Boolean {
     return try {
         close()
-        scope.cancel()
         true
     } catch (e: Throwable) {
         context.log(PluginCloseError(name, e))
         false
     } finally {
+        try {
+            scope.cancel()
+        } catch (e: Throwable) {
+            context.log(PluginCloseError(name, e))
+        }
         (javaClass.classLoader as? AutoCloseable)?.close()
     }
 }

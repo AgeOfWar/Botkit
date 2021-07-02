@@ -130,6 +130,22 @@ suspend inline fun <T> readDirectoryAsList(
     }
 }
 
+suspend inline fun <T> writeDirectory(
+    directory: Path,
+    content: List<T>,
+    crossinline transform: (T) -> String?,
+    crossinline exceptionHandler: (Path, Throwable) -> Unit = { file, t -> writeException(file.name, t) },
+    vararg options: OpenOption,
+    crossinline block: OutputStream.(T) -> Unit
+) {
+    directory.suspendCreateDirectories()
+    content.forEach { value ->
+        val fileName = transform(value) ?: return@forEach
+        val file = directory.resolve(fileName)
+        writeFile(file, { exceptionHandler(file, it) }, options = options) { block(value) }
+    }
+}
+
 @OptIn(ExperimentalStdlibApi::class)
 suspend inline fun <K : Any, V> readDirectoryAsMap(
     directory: Path,
@@ -149,6 +165,22 @@ suspend inline fun <K : Any, V> readDirectoryAsMap(
     }
 }
 
+suspend inline fun <K : Any, V> writeDirectory(
+    directory: Path,
+    content: Map<K, V>,
+    crossinline transform: (K) -> String?,
+    crossinline exceptionHandler: (Path, Throwable) -> Unit = { file, t -> writeException(file.name, t) },
+    vararg options: OpenOption,
+    crossinline block: OutputStream.(V) -> Unit
+) {
+    directory.suspendCreateDirectories()
+    content.forEach { (key, value) ->
+        val fileName = transform(key) ?: return@forEach
+        val file = directory.resolve(fileName)
+        writeFile(file, { exceptionHandler(file, it) }, options = options) { block(value) }
+    }
+}
+
 suspend inline fun <reified T> Json.readJsonDirectoryAsList(
     directory: Path,
     deserializer: DeserializationStrategy<T> = serializersModule.serializer(),
@@ -162,6 +194,21 @@ suspend inline fun <reified T> Json.readJsonDirectoryAsList(
         @OptIn(ExperimentalStdlibApi::class)
         throw SerializationException("An error occurred while deserializing $text to ${typeOf<T>()}", e)
     }
+}
+
+suspend inline fun <reified T> Json.writeJsonDirectory(
+    directory: Path,
+    content: List<T>,
+    serializer: SerializationStrategy<T> = serializersModule.serializer(),
+    crossinline exceptionHandler: (Path, Throwable) -> Unit = { file, t -> writeException(file.name, t) },
+    crossinline transform: (T) -> String?,
+) = writeDirectory(directory, content, transform, exceptionHandler) {
+    val text = try {
+        encodeToString(serializer, it)
+    } catch (e: Throwable) {
+        throw SerializationException("An error occurred while serializing $it", e)
+    }
+    bufferedWriter().write(text)
 }
 
 suspend inline fun <K : Any, reified V> Json.readJsonDirectoryAsMap(
@@ -179,17 +226,45 @@ suspend inline fun <K : Any, reified V> Json.readJsonDirectoryAsMap(
     }
 }
 
-suspend inline fun <reified V> Json.readJsonDirectoryAsMap(
+suspend inline fun <K : Any, reified V> Json.writeJsonDirectory(
     directory: Path,
-    defaultFileName: String,
+    content: Map<K, V>,
+    serializer: SerializationStrategy<V> = serializersModule.serializer(),
+    crossinline exceptionHandler: (Path, Throwable) -> Unit = { file, t -> writeException(file.name, t) },
+    crossinline transform: (K) -> String?,
+) = writeDirectory(directory, content, transform, exceptionHandler) {
+    val text = try {
+        encodeToString(serializer, it)
+    } catch (e: Throwable) {
+        throw SerializationException("An error occurred while serializing $it", e)
+    }
+    bufferedWriter().write(text)
+}
+
+suspend inline fun <reified V> Json.readJsonDirectoryWithNames(
+    directory: Path,
     deserializer: DeserializationStrategy<V> = serializersModule.serializer(),
     crossinline exceptionHandler: (Path, Throwable) -> V = { file, t -> readException(file.name, t) }
 ): Map<String, V> = readJsonDirectoryAsMap(directory, deserializer, exceptionHandler) {
-    val fileName = it.nameWithoutExtension
-    val extension = it.extension
-    when {
-        fileName == defaultFileName && extension == "json" -> ""
-        fileName.startsWith("$defaultFileName-") && extension == "json" -> fileName.substring(defaultFileName.length + 1)
-        else -> null
-    }
+    if (it.extension == "json") it.nameWithoutExtension else null
+}
+
+suspend inline fun <reified V> Json.writeJsonDirectoryWithNames(
+    directory: Path,
+    content: Map<String, V>,
+    serializer: SerializationStrategy<V> = serializersModule.serializer(),
+    crossinline exceptionHandler: (Path, Throwable) -> Unit = { file, t -> writeException(file.name, t) }
+) = writeJsonDirectory(directory, content, serializer, exceptionHandler) { "$it.json" }
+
+suspend inline fun <reified V> Json.readJsonDirectoryWithNames(
+    directory: Path,
+    default: Map<String, V>,
+    serializer: KSerializer<V> = serializersModule.serializer(),
+    crossinline readExceptionHandler: (Path, Throwable) -> V = { file, t -> readException(file.name, t) },
+    crossinline writeExceptionHandler: (Path, Throwable) -> Unit = { file, t -> writeException(file.name, t) }
+): Map<String, V> = if (directory.suspendExists()) {
+    readJsonDirectoryWithNames(directory, serializer, readExceptionHandler)
+} else {
+    writeJsonDirectoryWithNames(directory, default, serializer, writeExceptionHandler)
+    default
 }
