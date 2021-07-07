@@ -2,6 +2,7 @@ package com.github.ageofwar.botkit
 
 import com.github.ageofwar.botkit.files.readFileOrCopy
 import com.github.ageofwar.botkit.plugin.Plugin
+import com.github.ageofwar.ktelegram.Currency
 import com.github.ageofwar.ktelegram.TelegramApi
 import com.github.ageofwar.ktelegram.getMe
 import kotlinx.coroutines.cancelAndJoin
@@ -32,6 +33,7 @@ fun main(vararg args: String) = runBlocking {
     with(Context(api, logger, this, plugins, pluginsDirectory, commands, consoleCommandChannel)) {
         addDefaultConsoleCommands()
         logger.use {
+            loadCurrencies()
             loadPlugins()
             reloadBotCommands()
             log(BotStart(bot))
@@ -43,6 +45,12 @@ fun main(vararg args: String) = runBlocking {
             disablePlugins(plugins.keys.toSet())
         }
     }
+}
+
+private suspend fun loadCurrencies() {
+    println("Loading currencies...")
+    Currency.loadDefaults()
+    println("Done")
 }
 
 private suspend fun Context.loadPlugins() {
