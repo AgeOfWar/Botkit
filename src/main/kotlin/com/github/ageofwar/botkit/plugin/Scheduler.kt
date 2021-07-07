@@ -108,7 +108,7 @@ fun CoroutineScope.scheduleEveryDayBetween(startTime: LocalTime, endTime: LocalT
     while (isActive) {
         delayUntil(random.localTimeBetween(startTime, endTime), zoneId)
         block()
-        delayUntil(endTime)
+        delayUntil(endTime, zoneId)
     }
 }
 
