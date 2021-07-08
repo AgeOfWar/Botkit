@@ -13,7 +13,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.AgeOfWar:Botkit:2.2'
+    implementation 'com.github.AgeOfWar:Botkit:2.4'
 }
 ```
 
@@ -30,12 +30,14 @@ where options include:
 
 # Available commands
 ```text
-disable <plugin|*>  - disables plugin or all plugins
-enable <plugin|*>   - enables plugin or all plugins
-reload [plugin|*]   - reloads plugin or all plugins
-plugins             - shows enabled and available plugins
-stop                - stops botkit
-help                - shows list of commands
+help [command] - Shows list of all available commands
+reload [plugin|*] - Reloads enabled plugin
+debug - Enables or disables verbose errors
+stop - Stops Botkit
+enable <plugin|*> - Enables plugin in 'plugins' folder or pass url to enable remote plugin
+disable <plugin|*> - Disables enabled plugin
+plugins - Shows list of all enabled and available plugins
+api <method name> [parameters] - Makes a call to the Telegram Bot API
 ```
 Plugins can add custom commands
 
@@ -68,11 +70,13 @@ Remember to add `botkit.properties` file in your resource source set:
 ```properties
 name=MyPlugin
 pluginClassName=com.example.myplugin.MyPlugin
-apiVersion=2.2
+apiVersion=2.4
 ```
 
 | Botkit version | apiVersion | supported apiVersion |
 |----------------|------------|----------------------|
+| 2.4            | 2.4        | 2.3, 2.4             |
+| 2.3            | 2.3        | 2.3                  |
 | 2.2            | 2.2        | 2.2                  |
 | 2.1            | 2.1        | 2.0, 2.1             |
 | 2.0            | 2.0        | 2.0                  |
