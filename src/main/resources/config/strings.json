@@ -78,6 +78,10 @@
     "file remove": {
       "usage": "<path>",
       "description": "Removes plugin file"
+    },
+    "api": {
+      "usage": "<method name> [parameters]",
+      "description": "Makes a call to the Telegram Bot API"
     }
   }
 }

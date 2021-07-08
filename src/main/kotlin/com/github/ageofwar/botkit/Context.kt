@@ -27,7 +27,8 @@ fun Context.addDefaultConsoleCommands() = commands.putAll(arrayOf(
     "plugins" to PluginsCommand(this),
     "reload" to ReloadPluginsCommand(this),
     "debug" to DebugCommand(this),
-    "file" to FileCommand(this)
+    "file" to FileCommand(this),
+    "api" to TelegramApiRequestCommand(this)
 ))
 
 suspend fun Context.log(event: LoggerEvent) = logger.log(event)

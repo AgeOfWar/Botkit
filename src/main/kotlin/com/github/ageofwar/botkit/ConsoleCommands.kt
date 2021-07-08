@@ -3,11 +3,15 @@ package com.github.ageofwar.botkit
 import com.github.ageofwar.botkit.files.suspendDeleteExisting
 import com.github.ageofwar.botkit.files.suspendReadText
 import com.github.ageofwar.botkit.files.suspendWriteText
+import com.github.ageofwar.ktelegram.json.json
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 import java.net.MalformedURLException
 import java.net.URL
 import kotlin.io.path.exists
@@ -215,6 +219,18 @@ class FileCommand(private val context: Context) : ConsoleCommand {
             file.suspendDeleteExisting()
             logger.log("File removed", "Botkit", "INFO")
         }
+    }
+}
+
+class TelegramApiRequestCommand(private val context: Context) : ConsoleCommand {
+    override suspend fun handle(name: String, args: String) = with(context) {
+        if (args.isEmpty()) return logUsage(name)
+        val parts = args.split(Regex("\\s+"), limit = 2)
+        val method = parts[0]
+        val parameters = if (parts.size == 1) mapOf() else json.decodeFromString<Map<String, JsonElement>>(parts[1]).mapValues {  (_, value) ->
+            if (value is JsonPrimitive) value.content else value
+        }
+        println(api.request<JsonElement>(method, parameters))
     }
 }
 
