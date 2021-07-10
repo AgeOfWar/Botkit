@@ -10,6 +10,7 @@ import java.net.URL
 import java.net.URLClassLoader
 import java.nio.file.Path
 import java.util.*
+import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
@@ -44,7 +45,7 @@ suspend fun Context.loadPlugin(url: URL): Plugin = withContext(Dispatchers.IO) {
 suspend fun Context.loadPlugin(file: Path): Plugin = loadPlugin(file.toUri().toURL())
 
 suspend fun Path.availablePlugins(): List<Path> = withContext(Dispatchers.IO) {
-    listDirectoryEntries("*.jar").filter { it.isRegularFile() }
+    if (!isDirectory()) emptyList() else listDirectoryEntries("*.jar").filter { it.isRegularFile() }
 }
 
 suspend fun Path.availablePluginsNames(): List<String> = availablePlugins().map { it.name }

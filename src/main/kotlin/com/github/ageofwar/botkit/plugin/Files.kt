@@ -123,9 +123,11 @@ suspend inline fun <T> readDirectoryAsList(
     vararg options: OpenOption,
     crossinline block: InputStream.() -> T
 ): List<T> = buildList {
-    directory.suspendListDirectoryEntries().forEach { file ->
-        if (file.isRegularFile() && predicate(file)) {
-            add(readFile(file, { t -> exceptionHandler(file, t) }, options = options, block))
+    if (directory.suspendIsDirectory()) {
+        directory.suspendListDirectoryEntries().forEach { file ->
+            if (file.isRegularFile() && predicate(file)) {
+                add(readFile(file, { t -> exceptionHandler(file, t) }, options = options, block))
+            }
         }
     }
 }
@@ -154,12 +156,14 @@ suspend inline fun <K : Any, V> readDirectoryAsMap(
     vararg options: OpenOption,
     crossinline block: InputStream.() -> V
 ): Map<K, V> = buildMap {
-    directory.suspendListDirectoryEntries().forEach { file ->
-        if (file.isRegularFile()) {
-            val key = transform(file)
-            if (key != null) {
-                val value = readFile(file, { t -> exceptionHandler(file, t) }, options = options, block)
-                put(key, value)
+    if (directory.suspendIsDirectory()) {
+        directory.suspendListDirectoryEntries().forEach { file ->
+            if (file.isRegularFile()) {
+                val key = transform(file)
+                if (key != null) {
+                    val value = readFile(file, { t -> exceptionHandler(file, t) }, options = options, block)
+                    put(key, value)
+                }
             }
         }
     }

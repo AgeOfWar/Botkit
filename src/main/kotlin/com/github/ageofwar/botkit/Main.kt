@@ -1,6 +1,7 @@
 package com.github.ageofwar.botkit
 
 import com.github.ageofwar.botkit.files.readFileOrCopy
+import com.github.ageofwar.botkit.files.suspendCreateDirectories
 import com.github.ageofwar.botkit.plugin.Plugin
 import com.github.ageofwar.ktelegram.Currency
 import com.github.ageofwar.ktelegram.TelegramApi
@@ -48,13 +49,14 @@ fun main(vararg args: String) = runBlocking {
 }
 
 private suspend fun loadCurrencies() {
-    println("Loading currencies...")
+    print("Loading currencies... ")
     Currency.loadDefaults()
     println("Done")
 }
 
 private suspend fun Context.loadPlugins() {
     println("Loading plugins...")
+    pluginsDirectory.suspendCreateDirectories()
     enablePlugins(getAvailablePlugins())
     log(PluginsEnabled(plugins.keys.toSet()))
 }
