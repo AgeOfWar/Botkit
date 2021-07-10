@@ -9,7 +9,7 @@ import java.time.temporal.ChronoUnit
 import java.time.temporal.Temporal
 import kotlin.random.Random
 
-suspend fun delayUntil(temporal: Temporal) = delay(LocalDateTime.now().until(temporal, ChronoUnit.MILLIS))
+suspend fun delayUntil(temporal: Temporal) = delay(Instant.now().until(temporal, ChronoUnit.MILLIS))
 
 suspend fun delayUntil(time: LocalTime, zoneId: ZoneId = ZoneId.systemDefault()) {
     val now = ZonedDateTime.now(zoneId)
