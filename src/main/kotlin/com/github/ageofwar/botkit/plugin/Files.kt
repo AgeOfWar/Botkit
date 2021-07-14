@@ -1,6 +1,7 @@
 package com.github.ageofwar.botkit.plugin
 
 import com.github.ageofwar.botkit.files.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.*
@@ -27,6 +28,8 @@ fun writeException(file: String, cause: Throwable): Nothing = when (cause) {
     is IOException -> ioException(file, cause)
     else -> exception(cause.message, cause)
 }
+
+suspend inline fun <T> io(crossinline block: CoroutineScope.() -> T) = withContext(Dispatchers.IO) { block() }
 
 fun Plugin.file(path: String): Path = dataFolder.resolve(path)
 
