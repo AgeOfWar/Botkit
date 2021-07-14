@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.github.ageofwar"
-version = "2.5"
+version = "2.6"
 
 application {
     mainClass.set("com.github.ageofwar.botkit.MainKt")
@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    api("com.github.AgeOfWar:KTelegram:1.7")
+    api("com.github.AgeOfWar:KTelegram:1.7.1")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
     implementation("org.freemarker:freemarker:2.3.31")
 }
