@@ -230,7 +230,7 @@ class TelegramApiRequestCommand(private val context: Context) : ConsoleCommand {
         val parameters = if (parts.size == 1) mapOf() else json.decodeFromString<Map<String, JsonElement>>(parts[1]).mapValues {  (_, value) ->
             if (value is JsonPrimitive) value.content else value
         }
-        println(api.request<JsonElement>(method, parameters))
+        logger.log(api.request<JsonElement>(method, parameters).toString(), "Botkit", "INFO")
     }
 }
 

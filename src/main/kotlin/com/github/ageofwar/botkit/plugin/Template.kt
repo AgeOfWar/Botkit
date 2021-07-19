@@ -10,6 +10,7 @@ import freemarker.template.Configuration
 import freemarker.template.Template
 import java.io.StringWriter
 import java.io.Writer
+import kotlin.random.Random
 
 private fun String.template(args: Map<String, Any?>, configuration: Configuration.() -> Unit): String {
     val reader = reader()
@@ -20,6 +21,7 @@ private fun String.template(args: Map<String, Any?>, configuration: Configuratio
         configuration()
     }
     val template = Template("Botkit", reader, configuration)
+    template.setCustomAttribute("random", Random)
     template.process(args, writer)
     return writer.toString()
 }
