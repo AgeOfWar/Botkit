@@ -6,11 +6,13 @@ import com.github.ageofwar.ktelegram.text.parseMarkdown
 import com.github.ageofwar.ktelegram.text.toMarkdown
 import freemarker.core.CommonMarkupOutputFormat
 import freemarker.core.CommonTemplateMarkupOutputModel
-import freemarker.template.Configuration
-import freemarker.template.Template
+import freemarker.template.*
 import java.io.StringWriter
 import java.io.Writer
+import java.time.*
+import java.util.*
 import kotlin.random.Random
+
 
 private fun String.template(args: Map<String, Any?>, configuration: Configuration.() -> Unit): String {
     val reader = reader()
@@ -18,10 +20,12 @@ private fun String.template(args: Map<String, Any?>, configuration: Configuratio
     val configuration = Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS).apply {
         registeredCustomOutputFormats = listOf(MarkdownOutputFormat, HtmlOutputFormat)
         logTemplateExceptions = false
+        objectWrapper = ObjectWrapper
+        setSharedVariable("unicode", UnicodeTemplateMethodModel)
+        setSharedVariable("random", Random)
         configuration()
     }
     val template = Template("Botkit", reader, configuration)
-    template.setCustomAttribute("random", Random)
     template.process(args, writer)
     return writer.toString()
 }
@@ -144,4 +148,24 @@ private object HtmlOutputFormat : CommonMarkupOutputFormat<TemplateHtmlOutputMod
     }
     override fun isLegacyBuiltInBypassed(builtInName: String) = false
     override fun newTemplateMarkupOutputModel(plainTextContent: String?, markupContent: String?) = TemplateHtmlOutputModel(plainTextContent, markupContent)
+}
+
+private object UnicodeTemplateMethodModel : TemplateMethodModelEx {
+    override fun exec(args: MutableList<Any?>): Any {
+        if (args.size != 1) throw TemplateModelException("Wrong arguments")
+        return SimpleScalar((args[0] as SimpleNumber).asNumber.toChar().toString())
+    }
+}
+
+private object ObjectWrapper : DefaultObjectWrapper(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS) {
+    override fun wrap(obj: Any?): TemplateModel = when (obj) {
+        is LocalDateTime -> SimpleDate(Date.from(obj.toInstant(ZoneOffset.UTC)), TemplateDateModel.DATETIME)
+        is LocalDate -> SimpleDate(Date.from(obj.atStartOfDay().toInstant(ZoneOffset.UTC)), TemplateDateModel.DATE)
+        is LocalTime -> SimpleDate(Date.from(obj.atDate(LocalDate.EPOCH).toInstant(ZoneOffset.UTC)), TemplateDateModel.TIME)
+        is Instant -> SimpleDate(Date.from(obj), TemplateDateModel.DATETIME)
+        is ZonedDateTime -> SimpleDate(Date.from(obj.toInstant()), TemplateDateModel.DATETIME)
+        is OffsetDateTime -> SimpleDate(Date.from(obj.toInstant()), TemplateDateModel.DATETIME)
+        is OffsetTime -> SimpleDate(Date.from(obj.atDate(LocalDate.EPOCH).toInstant()), TemplateDateModel.TIME)
+        else -> super.wrap(obj)
+    }
 }
