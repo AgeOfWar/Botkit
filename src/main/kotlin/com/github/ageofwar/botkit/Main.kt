@@ -55,9 +55,10 @@ private suspend fun loadCurrencies() {
 }
 
 private suspend fun Context.loadPlugins() {
-    println("Loading plugins...")
+    print("Loading plugins... ")
     pluginsDirectory.suspendCreateDirectories()
     enablePlugins(getAvailablePlugins())
+    println("Done")
     log(PluginsEnabled(plugins.keys.toSet()))
 }
 
