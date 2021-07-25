@@ -158,7 +158,7 @@ private object UnicodeTemplateMethodModel : TemplateMethodModelEx {
 }
 
 private object ObjectWrapper : DefaultObjectWrapper(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS) {
-    override fun wrap(obj: Any?): TemplateModel = when (obj) {
+    override fun wrap(obj: Any?): TemplateModel? = when (obj) {
         is LocalDateTime -> SimpleDate(Date.from(obj.toInstant(ZoneOffset.UTC)), TemplateDateModel.DATETIME)
         is LocalDate -> SimpleDate(Date.from(obj.atStartOfDay().toInstant(ZoneOffset.UTC)), TemplateDateModel.DATE)
         is LocalTime -> SimpleDate(Date.from(obj.atDate(LocalDate.EPOCH).toInstant(ZoneOffset.UTC)), TemplateDateModel.TIME)
@@ -166,6 +166,6 @@ private object ObjectWrapper : DefaultObjectWrapper(Configuration.DEFAULT_INCOMP
         is ZonedDateTime -> SimpleDate(Date.from(obj.toInstant()), TemplateDateModel.DATETIME)
         is OffsetDateTime -> SimpleDate(Date.from(obj.toInstant()), TemplateDateModel.DATETIME)
         is OffsetTime -> SimpleDate(Date.from(obj.atDate(LocalDate.EPOCH).toInstant()), TemplateDateModel.TIME)
-        else -> super.wrap(obj)
+        else -> super.handleUnknownType(obj)
     }
 }
