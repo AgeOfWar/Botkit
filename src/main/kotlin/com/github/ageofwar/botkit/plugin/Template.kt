@@ -18,6 +18,7 @@ private fun String.template(args: Map<String, Any?>, configuration: Configuratio
     val reader = reader()
     val writer = StringWriter()
     val configuration = Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS).apply {
+        whitespaceStripping = false
         registeredCustomOutputFormats = listOf(MarkdownOutputFormat, HtmlOutputFormat)
         logTemplateExceptions = false
         objectWrapper = ObjectWrapper
