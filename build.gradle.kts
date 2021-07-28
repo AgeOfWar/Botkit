@@ -72,6 +72,8 @@ tasks {
     }
     
     compileKotlin {
+        sourceCompatibility = "11"
+        targetCompatibility = "11"
         kotlinOptions.jvmTarget = "11"
     }
 }
