@@ -19,7 +19,7 @@ val SUPPORTED_API_VERSIONS = arrayOf("2.3", "2.4", "2.5", "2.6", "2.7")
 
 suspend fun Context.loadPlugin(url: URL): Plugin = withContext(Dispatchers.IO) {
     val loader = try {
-        URLClassLoader(arrayOf(url))
+        URLClassLoader(arrayOf(url), Plugin::class.java.classLoader)
     } catch (e: Throwable) {
         throw PluginLoadException(e.message ?: "Cannot access url '$url'", e)
     }

@@ -68,9 +68,8 @@ abstract class Plugin {
     fun warning(message: String?) { context.pluginWarning(this, message) }
     fun error(message: String?, throwable: Throwable? = null) { context.pluginError(this, message, throwable) }
     
-    fun <T : Plugin, R> withPlugin(name: String, block: T.() -> R): R? {
+    fun <R> withPlugin(name: String, block: Plugin.() -> R): R? {
         val plugin = context.plugins[name] ?: return null
-        plugin as T
         return plugin.block()
     }
 }
