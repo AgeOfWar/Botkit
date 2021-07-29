@@ -72,10 +72,17 @@ abstract class Plugin {
     fun <T : Plugin, R> withPlugin(`class`: Class<out T>, block: T.() -> R): R {
         val plugin = context.plugins.values.filterIsInstance(`class`).firstOrNull()
             ?: throw PluginNotFoundException(`class`)
-            return plugin.block()
+        return plugin.block()
     }
-    fun <T : Plugin, R> withPlugin(`class`: KClass<out T>, block: T.() -> R) = withPlugin(`class`.java, block)
+    fun <T : Plugin, R> withPlugin(`class`: KClass<out T>, block: T.() -> R): R = withPlugin(`class`.java, block)
     inline fun <reified T : Plugin, R> withPlugin(noinline block: T.() -> R): R = withPlugin(T::class, block)
+    
+    fun <T : Plugin, R> withPluginOrNull(`class`: Class<out T>, block: T.() -> R): R? {
+        val plugin = context.plugins.values.filterIsInstance(`class`).firstOrNull() ?: return null
+        return plugin.block()
+    }
+    fun <T : Plugin, R> withPluginOrNull(`class`: KClass<out T>, block: T.() -> R): R? = withPluginOrNull(`class`.java, block)
+    inline fun <reified T : Plugin, R> withPluginOrNull(noinline block: T.() -> R): R? = withPluginOrNull(T::class, block)
 }
 
 fun interface PluginLogger {
