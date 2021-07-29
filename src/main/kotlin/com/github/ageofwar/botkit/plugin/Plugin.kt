@@ -10,6 +10,7 @@ import java.net.URL
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.reflect.KClass
 
 abstract class Plugin {
     val api get() = context.api
@@ -68,10 +69,13 @@ abstract class Plugin {
     fun warning(message: String?) { context.pluginWarning(this, message) }
     fun error(message: String?, throwable: Throwable? = null) { context.pluginError(this, message, throwable) }
     
-    fun <R> withPlugin(name: String, block: Plugin.() -> R): R? {
-        val plugin = context.plugins[name] ?: return null
-        return plugin.block()
+    fun <T : Plugin, R> withPlugin(`class`: Class<out T>, block: T.() -> R): R {
+        val plugin = context.plugins.values.filterIsInstance(`class`).firstOrNull()
+            ?: throw PluginNotFoundException(`class`)
+            return plugin.block()
     }
+    fun <T : Plugin, R> withPlugin(`class`: KClass<out T>, block: T.() -> R) = withPlugin(`class`.java, block)
+    inline fun <reified T : Plugin, R> withPlugin(noinline block: T.() -> R): R = withPlugin(T::class, block)
 }
 
 fun interface PluginLogger {

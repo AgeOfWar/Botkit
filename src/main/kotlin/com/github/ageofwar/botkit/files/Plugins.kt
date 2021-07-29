@@ -10,6 +10,7 @@ import java.net.URL
 import java.net.URLClassLoader
 import java.nio.file.Path
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.listDirectoryEntries
@@ -19,7 +20,7 @@ val SUPPORTED_API_VERSIONS = arrayOf("2.3", "2.4", "2.5", "2.6", "2.7")
 
 suspend fun Context.loadPlugin(url: URL): Plugin = withContext(Dispatchers.IO) {
     val loader = try {
-        URLClassLoader(arrayOf(url), Plugin::class.java.classLoader)
+        PluginClassLoader(url, parent = Plugin::class.java.classLoader)
     } catch (e: Throwable) {
         throw PluginLoadException(e.message ?: "Cannot access url '$url'", e)
     }
@@ -62,6 +63,25 @@ data class PluginInfo(
     val pluginClassName: String,
     val apiVersion: String
 )
+
+class PluginClassLoader(vararg urls: URL, parent: ClassLoader) : URLClassLoader(urls, parent) {
+    override fun findClass(name: String): Class<*>? {
+        var result = classes[name]
+        if (result == null) {
+            result = super.findClass(name)
+        }
+        classes[name] = result
+        return result
+    }
+    
+    override fun close() {
+        super.close()
+    }
+    
+    companion object {
+        private val classes: MutableMap<String, Class<*>?> = ConcurrentHashMap()
+    }
+}
 
 private fun InputStream.readPluginInfo() = use {
     val pluginInfo = Properties()
