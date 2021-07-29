@@ -65,16 +65,24 @@ data class PluginInfo(
 )
 
 class PluginClassLoader(vararg urls: URL, parent: ClassLoader) : URLClassLoader(urls, parent) {
+    private val classes: MutableMap<String, Class<*>?> = ConcurrentHashMap()
+    
     override fun findClass(name: String): Class<*>? {
         var result = classes[name]
         if (result == null) {
-            result = super.findClass(name)
+            try {
+                result = super.findClass(name)
+            } catch (e: ClassNotFoundException) {
+                return PluginClassLoader.classes[name] ?: throw ClassNotFoundException(name, e)
+            }
         }
         classes[name] = result
+        PluginClassLoader.classes[name] = result
         return result
     }
     
     override fun close() {
+        classes.forEach { (key, _) -> PluginClassLoader.classes -= key }
         super.close()
     }
     
