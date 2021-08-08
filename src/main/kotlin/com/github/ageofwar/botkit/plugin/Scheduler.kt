@@ -105,6 +105,7 @@ fun CoroutineScope.scheduleEveryYearAt(dayOfYear: MonthDay, time: LocalTime, zon
 }
 
 fun CoroutineScope.scheduleEveryDayBetween(startTime: LocalTime, endTime: LocalTime, zoneId: ZoneId = ZoneId.systemDefault(), random: Random = Random, block: suspend CoroutineScope.() -> Unit) = launch {
+    delayUntil(endTime)
     while (isActive) {
         delayUntil(random.localTimeBetween(startTime, endTime), zoneId)
         block()

@@ -98,6 +98,7 @@ suspend fun Plugin.init(context: Context): Boolean {
         true
     } catch (e: Throwable) {
         context.log(PluginInitError(name, e))
+        close(context)
         false
     }
 }

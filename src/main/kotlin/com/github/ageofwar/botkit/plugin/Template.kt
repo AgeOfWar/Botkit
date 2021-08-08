@@ -22,6 +22,7 @@ private fun String.template(args: Map<String, Any?>, configuration: Configuratio
         registeredCustomOutputFormats = listOf(MarkdownOutputFormat, HtmlOutputFormat)
         logTemplateExceptions = false
         objectWrapper = ObjectWrapper
+        outputEncoding = "utf8"
         setSharedVariable("unicode", UnicodeTemplateMethodModel)
         setSharedVariable("random", Random)
         configuration()
@@ -31,54 +32,151 @@ private fun String.template(args: Map<String, Any?>, configuration: Configuratio
     return writer.toString()
 }
 
-fun String.template(args: Map<String, Any?>) = template(args) { }
-fun String.template(vararg args: Pair<String, Any?>) = template(args.toMap())
+@JvmOverloads
+fun String.template(args: Map<String, Any?>, locale: Locale = Locale.ROOT) = template(args) {
+    this.locale = locale
+}
 
-fun Text.Companion.templateMarkdown(text: String, args: Map<String, Any?>): Text = parseMarkdown(text.template(args) { outputFormat = MarkdownOutputFormat })
-fun Text.Companion.templateMarkdown(text: String, vararg args: Pair<String, Any?>): Text = templateMarkdown(text, args.toMap())
-fun Text.Companion.templateHtml(text: String, args: Map<String, Any?>): Text = parseHtml(text.template(args) { outputFormat = HtmlOutputFormat })
-fun Text.Companion.templateHtml(text: String, vararg args: Pair<String, Any?>): Text = templateHtml(text, args.toMap())
+@JvmOverloads
+fun String.template(vararg args: Pair<String, Any?>, locale: Locale = Locale.ROOT) = template(args.toMap(), locale)
 
-fun Text.templateMarkdownText(args: Map<String, Any?>) = Text.templateMarkdown(text, args)
-fun Text.templateMarkdownText(vararg args: Pair<String, Any?>) = Text.templateMarkdown(text, args.toMap())
-fun Text.templateHtmlText(args: Map<String, Any?>) = Text.templateHtml(text, args)
-fun Text.templateHtmlText(vararg args: Pair<String, Any?>) = Text.templateHtml(text, args.toMap())
+@JvmOverloads
+fun Text.Companion.templateMarkdown(text: String, args: Map<String, Any?>, locale: Locale = Locale.ROOT): Text = parseMarkdown(text.template(args) {
+    this.locale = locale
+    outputFormat = MarkdownOutputFormat
+})
 
-fun MessageContent<*>.templateMarkdownText(args: Map<String, Any?>) = when(this) {
-    is TextContent -> copy(text = text.templateMarkdownText(args))
-    is PhotoContent -> copy(caption = caption?.templateMarkdownText(args))
-    is VideoContent -> copy(caption = caption?.templateMarkdownText(args))
-    is AudioContent -> copy(caption = caption?.templateMarkdownText(args))
-    is VoiceContent -> copy(caption = caption?.templateMarkdownText(args))
-    is AnimationContent -> copy(caption = caption?.templateMarkdownText(args))
-    is DocumentContent -> copy(caption = caption?.templateMarkdownText(args))
+@JvmOverloads
+fun Text.Companion.templateMarkdown(text: String, vararg args: Pair<String, Any?>, locale: Locale = Locale.ROOT): Text = templateMarkdown(text, args.toMap(), locale)
+
+@JvmOverloads
+fun Text.Companion.templateHtml(text: String, args: Map<String, Any?>, locale: Locale = Locale.ROOT): Text = parseHtml(text.template(args) {
+    this.locale = locale
+    outputFormat = HtmlOutputFormat
+})
+
+@JvmOverloads
+fun Text.Companion.templateHtml(text: String, vararg args: Pair<String, Any?>, locale: Locale = Locale.ROOT): Text = templateHtml(text, args.toMap(), locale)
+
+@JvmOverloads
+fun Text.templateMarkdownText(args: Map<String, Any?>, locale: Locale = Locale.ROOT) = Text.templateMarkdown(text, args, locale)
+
+@JvmOverloads
+fun Text.templateMarkdownText(vararg args: Pair<String, Any?>, locale: Locale = Locale.ROOT) = Text.templateMarkdown(text, args.toMap(), locale)
+
+@JvmOverloads
+fun Text.templateHtmlText(args: Map<String, Any?>, locale: Locale = Locale.ROOT) = Text.templateHtml(text, args, locale)
+
+@JvmOverloads
+fun Text.templateHtmlText(vararg args: Pair<String, Any?>, locale: Locale = Locale.ROOT) = Text.templateHtml(text, args.toMap(), locale)
+
+@JvmOverloads
+fun MessageContent<*>.templateMarkdownText(args: Map<String, Any?>, locale: Locale = Locale.ROOT) = when(this) {
+    is TextContent -> copy(text = text.templateMarkdownText(args, locale))
+    is PhotoContent -> copy(caption = caption?.templateMarkdownText(args, locale))
+    is VideoContent -> copy(caption = caption?.templateMarkdownText(args, locale))
+    is AudioContent -> copy(caption = caption?.templateMarkdownText(args, locale))
+    is VoiceContent -> copy(caption = caption?.templateMarkdownText(args, locale))
+    is AnimationContent -> copy(caption = caption?.templateMarkdownText(args, locale))
+    is DocumentContent -> copy(caption = caption?.templateMarkdownText(args, locale))
     else -> this
 }
-fun MessageContent<*>.templateMarkdownText(vararg args: Pair<String, Any?>) = templateMarkdownText(args.toMap())
 
-fun MessageContent<*>.templateHtmlText(args: Map<String, Any?>) = when(this) {
-    is TextContent -> copy(text = text.templateHtmlText(args))
-    is PhotoContent -> copy(caption = caption?.templateHtmlText(args))
-    is VideoContent -> copy(caption = caption?.templateHtmlText(args))
-    is AudioContent -> copy(caption = caption?.templateHtmlText(args))
-    is VoiceContent -> copy(caption = caption?.templateHtmlText(args))
-    is AnimationContent -> copy(caption = caption?.templateHtmlText(args))
-    is DocumentContent -> copy(caption = caption?.templateHtmlText(args))
+@JvmOverloads
+fun MessageContent<*>.templateMarkdownText(vararg args: Pair<String, Any?>, locale: Locale = Locale.ROOT) = templateMarkdownText(args.toMap(), locale)
+
+@JvmOverloads
+fun MessageContent<*>.templateHtmlText(args: Map<String, Any?>, locale: Locale = Locale.ROOT) = when(this) {
+    is TextContent -> copy(text = text.templateHtmlText(args, locale))
+    is PhotoContent -> copy(caption = caption?.templateHtmlText(args, locale))
+    is VideoContent -> copy(caption = caption?.templateHtmlText(args, locale))
+    is AudioContent -> copy(caption = caption?.templateHtmlText(args, locale))
+    is VoiceContent -> copy(caption = caption?.templateHtmlText(args, locale))
+    is AnimationContent -> copy(caption = caption?.templateHtmlText(args, locale))
+    is DocumentContent -> copy(caption = caption?.templateHtmlText(args, locale))
     else -> this
 }
-fun MessageContent<*>.templateHtmlText(vararg args: Pair<String, Any?>) = templateHtmlText(args.toMap())
 
-@Deprecated("Use Text.Companion.parseMarkdown instead", ReplaceWith("Text.Companion.parseMarkdown"))
+@JvmOverloads
+fun MessageContent<*>.templateHtmlText(vararg args: Pair<String, Any?>, locale: Locale = Locale.ROOT) = templateHtmlText(args.toMap(), locale)
+
+@JvmOverloads
+fun InlineMessageContent.templateMarkdownText(args: Map<String, Any?>, locale: Locale = Locale.ROOT) = when(this) {
+    is InlineTextContent -> copy(text = text.templateMarkdownText(args, locale))
+    is InlineVenueContent -> copy(
+        venue = venue.copy(
+            title = venue.title.template(args, locale),
+            address = venue.address.template(args, locale),
+            foursquareId = venue.foursquareId?.template(args, locale),
+            foursquareType = venue.foursquareType?.template(args, locale),
+            googlePlaceId = venue.googlePlaceId?.template(args, locale),
+            googlePlaceType = venue.googlePlaceType?.template(args, locale)
+        )
+    )
+    is InlineContactContent -> copy(
+        phoneNumber = phoneNumber.template(args, locale),
+        firstName = phoneNumber.template(args, locale),
+        lastName = lastName?.template(args, locale),
+        vcard = vcard?.template(args, locale)
+    )
+    is InlineInvoiceContent -> copy(
+        title = title.template(args, locale),
+        description = description.template(args, locale),
+        startParameter = startParameter?.template(args, locale),
+        providerData = providerData?.template(args, locale),
+        photoUrl = photoUrl?.template(args, locale),
+        providerToken = providerToken.template(args, locale)
+    )
+    else -> this
+}
+
+@JvmOverloads
+fun InlineMessageContent.templateMarkdownText(vararg args: Pair<String, Any?>, locale: Locale = Locale.ROOT) = templateMarkdownText(args.toMap(), locale)
+
+@JvmOverloads
+fun InlineMessageContent.templateHtmlText(args: Map<String, Any?>, locale: Locale = Locale.ROOT) = when(this) {
+    is InlineTextContent -> copy(text = text.templateHtmlText(args, locale))
+    is InlineVenueContent -> copy(
+        venue = venue.copy(
+            title = venue.title.template(args, locale),
+            address = venue.address.template(args, locale),
+            foursquareId = venue.foursquareId?.template(args, locale),
+            foursquareType = venue.foursquareType?.template(args, locale),
+            googlePlaceId = venue.googlePlaceId?.template(args, locale),
+            googlePlaceType = venue.googlePlaceType?.template(args, locale)
+        )
+    )
+    is InlineContactContent -> copy(
+        phoneNumber = phoneNumber.template(args, locale),
+        firstName = phoneNumber.template(args, locale),
+        lastName = lastName?.template(args, locale),
+        vcard = vcard?.template(args, locale)
+    )
+    is InlineInvoiceContent -> copy(
+        title = title.template(args, locale),
+        description = description.template(args, locale),
+        startParameter = startParameter?.template(args, locale),
+        providerData = providerData?.template(args, locale),
+        photoUrl = photoUrl?.template(args, locale),
+        providerToken = providerToken.template(args, locale)
+    )
+    else -> this
+}
+
+@JvmOverloads
+fun InlineMessageContent.templateHtmlText(vararg args: Pair<String, Any?>, locale: Locale = Locale.ROOT) = templateHtmlText(args.toMap(), locale)
+
+@Deprecated("Use Text.Companion.templateMarkdown instead", ReplaceWith("Text.Companion.templateMarkdown"))
 fun Text.template(args: Map<String, Any?>): Text {
     return Text.parseMarkdown(toMarkdown().template(args) { outputFormat = MarkdownOutputFormat })
 }
 
-@Deprecated("Use Text.Companion.parseMarkdown instead", ReplaceWith("Text.Companion.parseMarkdown"))
+@Deprecated("Use Text.Companion.templateMarkdown instead", ReplaceWith("Text.Companion.templateMarkdown"))
 fun Text.template(vararg args: Pair<String, Any?>): Text {
     return template(args.toMap())
 }
 
-@Deprecated("Use Text.templateText instead", ReplaceWith("Text.templateText"))
+@Deprecated("Use MessageContent.templateMarkdownText instead", ReplaceWith("MessageContent.templateMarkdownText"))
 fun MessageContent<*>.template(args: Map<String, Any?>) = when(this) {
     is TextContent -> copy(text = text.template(args))
     is PhotoContent -> copy(caption = caption?.template(args))
@@ -90,7 +188,7 @@ fun MessageContent<*>.template(args: Map<String, Any?>) = when(this) {
     else -> this
 }
 
-@Deprecated("Use Text.templateText instead", ReplaceWith("Text.templateText"))
+@Deprecated("Use MessageContent.templateMarkdownText instead", ReplaceWith("MessageContent.templateMarkdownText"))
 fun MessageContent<*>.template(vararg args: Pair<String, Any?>) = template(args.toMap())
 
 private class TemplateMarkdownOutputModel(plainTextContent: String?, markupContent: String?) : CommonTemplateMarkupOutputModel<TemplateMarkdownOutputModel>(plainTextContent, markupContent) {

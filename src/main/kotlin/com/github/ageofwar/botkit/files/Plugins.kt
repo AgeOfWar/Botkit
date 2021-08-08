@@ -16,7 +16,7 @@ import kotlin.io.path.isRegularFile
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
 
-val SUPPORTED_API_VERSIONS = arrayOf("2.3", "2.4", "2.5", "2.6", "2.7")
+val SUPPORTED_API_VERSIONS = arrayOf("2.3", "2.4", "2.5", "2.6", "2.7", "2.8")
 
 suspend fun Context.loadPlugin(url: URL): Plugin = withContext(Dispatchers.IO) {
     val loader = try {
@@ -24,11 +24,9 @@ suspend fun Context.loadPlugin(url: URL): Plugin = withContext(Dispatchers.IO) {
     } catch (e: Throwable) {
         throw PluginLoadException(e.message ?: "Cannot access url '$url'", e)
     }
-    val (name, pluginClassName, apiVersion) = loader.getResourceAsStream("botkit.properties")?.readPluginInfo()
-        ?: throw PluginLoadException("Missing 'botkit.properties'")
-    val plugin = loader.loadClass(pluginClassName)?.getConstructor()?.newInstance()
-            as? Plugin ?: throw PluginLoadException("Cannot access '$pluginClassName' as ${Plugin::class.java.name} implementation")
+    val (name, _, apiVersion) = loader.pluginInfo
     if (apiVersion !in SUPPORTED_API_VERSIONS) throw PluginLoadException("API version '$apiVersion' is not supported by this Botkit version (supported versions: ${SUPPORTED_API_VERSIONS.contentToString()})")
+    val plugin = loader.newPluginInstance()
     plugin.apply {
         this.name = name
         this.url = url
@@ -65,7 +63,17 @@ data class PluginInfo(
 )
 
 class PluginClassLoader(vararg urls: URL, parent: ClassLoader) : URLClassLoader(urls, parent) {
+    val pluginInfo: PluginInfo
+    
     private val classes: MutableMap<String, Class<*>?> = ConcurrentHashMap()
+    
+    init {
+        pluginInfo = getResourceAsStream("botkit.properties")?.readPluginInfo()
+            ?: throw PluginLoadException("Missing 'botkit.properties'")
+    }
+    
+    fun newPluginInstance() = loadClass(pluginInfo.pluginClassName)?.getConstructor()?.newInstance()
+            as? Plugin ?: throw PluginLoadException("Cannot access '${pluginInfo.pluginClassName}' as ${Plugin::class.java.name} implementation")
     
     override fun findClass(name: String): Class<*>? {
         var result = classes[name]

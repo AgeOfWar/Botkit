@@ -13,3 +13,8 @@ fun <T> Map<String, T>.localized(locale: Locale?, orElse: String = "en", lazyMes
 fun <T> Map<String, T>.localized(languageCode: String?, orElse: String = "en", lazyMessage: () -> Any? = { "Missing default locale '$orElse'" }): T = localizedOrElse(languageCode, orElse) ?: throw PluginException(lazyMessage().toString())
 fun <T> Map<String, T>.localized(user: User?, orElse: String = "en", lazyMessage: () -> Any? = { "Missing default locale '$orElse'" }): T = localizedOrElse(user, orElse) ?: throw PluginException(lazyMessage().toString())
 fun <T> Map<String, T>.localized(sender: Sender?, orElse: String = "en", lazyMessage: () -> Any? = { "Missing default locale '$orElse'" }): T = localizedOrElse(sender, orElse) ?: throw PluginException(lazyMessage().toString())
+
+val User.locale: Locale get() = if (languageCode != null) Locale.forLanguageTag(languageCode) else Locale.ROOT
+val Sender.locale: Locale get() = (this as? User)?.locale ?: Locale.ROOT
+
+val Sender.languageCode: String? get() = (this as? User)?.languageCode
