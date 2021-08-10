@@ -258,6 +258,12 @@ private object UnicodeTemplateMethodModel : TemplateMethodModelEx {
 
 private object ObjectWrapper : DefaultObjectWrapper(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS) {
     override fun wrap(obj: Any?): TemplateModel? = when (obj) {
+        is Int -> SimpleNumber(obj)
+        is Long -> SimpleNumber(obj)
+        is Byte -> SimpleNumber(obj)
+        is Short -> SimpleNumber(obj)
+        is Double -> SimpleNumber(obj)
+        is Float -> SimpleNumber(obj)
         is LocalDateTime -> SimpleDate(Date.from(obj.toInstant(ZoneOffset.UTC)), TemplateDateModel.DATETIME)
         is LocalDate -> SimpleDate(Date.from(obj.atStartOfDay().toInstant(ZoneOffset.UTC)), TemplateDateModel.DATE)
         is LocalTime -> SimpleDate(Date.from(obj.atDate(LocalDate.EPOCH).toInstant(ZoneOffset.UTC)), TemplateDateModel.TIME)
