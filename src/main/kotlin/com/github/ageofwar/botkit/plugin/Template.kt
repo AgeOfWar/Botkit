@@ -271,6 +271,7 @@ private object ObjectWrapper : DefaultObjectWrapper(Configuration.DEFAULT_INCOMP
         is ZonedDateTime -> SimpleDate(Date.from(obj.toInstant()), TemplateDateModel.DATETIME)
         is OffsetDateTime -> SimpleDate(Date.from(obj.toInstant()), TemplateDateModel.DATETIME)
         is OffsetTime -> SimpleDate(Date.from(obj.atDate(LocalDate.EPOCH).toInstant()), TemplateDateModel.TIME)
+        is LinkedHashMap<*, *> -> DefaultMapAdapter.adapt(obj, this)
         else -> super.handleUnknownType(obj)
     }
 }
