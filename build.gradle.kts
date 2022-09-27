@@ -1,12 +1,12 @@
 plugins {
-    kotlin("jvm") version "1.5.0"
-    kotlin("plugin.serialization") version "1.5.0"
+    kotlin("jvm") version "1.7.10"
+    kotlin("plugin.serialization") version "1.7.10"
     application
     `maven-publish`
 }
 
 group = "com.github.ageofwar"
-version = "2.8.2"
+version = "2.8.3"
 
 application {
     mainClass.set("com.github.ageofwar.botkit.MainKt")
@@ -19,10 +19,10 @@ repositories {
 }
 
 dependencies {
-    api("com.github.AgeOfWar:KTelegram:1.7.6")
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
+    api("com.github.AgeOfWar:KTelegram:1.7.7")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     implementation("org.freemarker:freemarker:2.3.31")
-    implementation("org.slf4j:slf4j-nop:1.7.30")
+    implementation("org.slf4j:slf4j-nop:2.0.1")
 }
 
 tasks {
@@ -31,6 +31,7 @@ tasks {
             attributes("Main-Class" to "com.github.ageofwar.botkit.MainKt")
         }
         includeEmptyDirs = false
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
         archiveClassifier.set("fat")
         from(configurations.compileClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
         from(sourceSets.main.get().output)
@@ -38,6 +39,7 @@ tasks {
     
     register<Jar>("libFatJar") {
         includeEmptyDirs = false
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
         archiveClassifier.set("lib")
         exclude("**/botkit/*.class")
         exclude("**/botkit/files/**")
